@@ -1,3 +1,15 @@
+Changes in 0.2-0
+
+  * BUG FIX: df in logLik.mpt was incorrect by one
+  * residuals.mpt (new function): residuals for MPT models
+  * plot.mpt (new function): plots MPT residuals against fitted values
+  * proact (new data set): recall frequencies for DaPolito's experiment on
+    proactive inhibition
+  * mptEM: new stepsize argument
+  * mpt.Rd (value): update
+  * mptEM.Rd (usage, value): update
+  * DESCRIPTION (Date, Version): 0.2-0
+
 Changes in 0.1-0
 
   * initial release on CRAN

@@ -18,7 +18,7 @@ mpt <- function(formula, data, treeid = "treeid", constr = NULL,
       pterms <- strsplit(terms[[j]][i], "\\*")[[1]]
       cval <- sum(as.numeric(grep("^[0-9]+$", pterms, value=TRUE)))
       if(cval > 0) cc[i,j] <- cval
-      for(s in seq(along.with=theta)){
+      for(s in seq_along(theta)){
         tname <- names(theta)[s]
   
         aa[i,j,s] <- sum(grepl(paste("^", tname, "$", sep=""), pterms))
@@ -70,26 +70,26 @@ mpt <- function(formula, data, treeid = "treeid", constr = NULL,
   
   fit    <- mptEM(theta=theta, data=freq, a=aa, b=bb, c=cc, ...)
   loglik <- fit$loglik
-  aic    <- -2*loglik + 2*length(theta)
   fitted <- n*fit$pcat
   G2     <- 2*(sum(freq*log(freq/(fitted))))
   df     <- sum(ncat - 1) - length(theta)
   gof    <- c(G2=G2, df=df, pval = 1 - pchisq(G2, df))
 
   out <- list(coefficients=fit$theta, fitted.values=fitted, loglik=loglik,
-    aic=aic, a=aa, b=bb, c=cc, goodness.of.fit=gof, pcat=fit$pcat,
-    formula=formula, ntrees=ntrees)
+    a=aa, b=bb, c=cc, goodness.of.fit=gof, iter=fit$iter, pcat=fit$pcat,
+    pbranch=fit$pbranch, formula=formula, ntrees=ntrees, n=n, y=freq)
   class(out) <- "mpt"
   out
 }
 
 
 ## EM algorithm
-mptEM <- function(theta, data, a, b, c, maxit = 1000, epsilon = 1e-8,
-  verbose = FALSE){
+mptEM <- function(theta, data, a, b, c, maxit = 1000, tolerance = 1e-8,
+  stepsize = 1, verbose = FALSE){
   nbranch <- dim(a)[1]
   pbranch <- matrix(NA, nbranch, length(data))
   loglik0 <- -Inf
+  theta1  <- theta
 
   iter <- 1
   while(iter < maxit){
@@ -97,23 +97,25 @@ mptEM <- function(theta, data, a, b, c, maxit = 1000, epsilon = 1e-8,
 
     ## E step
     for(i in 1:nbranch)
-      for(j in seq(along.with=data))
-        pbranch[i, j] <- c[i,j]*prod(theta^a[i,j,] * (1 - theta)^b[i,j,])
+      for(j in seq_along(data))
+        pbranch[i, j] <- c[i,j] * prod(theta^a[i,j,] * (1 - theta)^b[i,j,])
     
     pcat    <- colSums(pbranch, na.rm=TRUE)
     loglik1 <- sum(data*log(pcat))
-    if(loglik1 - loglik0 < epsilon) break  # stop if converged
+    if(loglik1 - loglik0 < tolerance) break  # stop if converged
     loglik0 <- loglik1
     m       <- t(data*t(pbranch)/pcat)
     
     ## M step
-    for(s in seq(along.with=theta))
-      theta[s] <-
+    for(s in seq_along(theta))
+      theta1[s] <-
         sum(a[,,s]*m, na.rm=TRUE)/sum((a[,,s] + b[,,s])*m, na.rm=TRUE)
+    theta   <- theta - stepsize*(theta - theta1)
     iter    <- iter + 1
   }
   if(iter >= maxit) warning("iteration maximum has been exceeded")
-  out <- list(theta=theta, pcat=pcat, loglik=loglik1)
+  out <- list(theta=theta, loglik=loglik1, pcat=pcat, pbranch=pbranch,
+    iter=iter)
   out
 }
 
@@ -130,7 +132,7 @@ print.mpt <- function(x, digits=max(3, getOption("digits")-3),
   cat("\nGoodness of fit (2 log likelihood ratio):\n")
   cat("\tG2(", df, ") = ", format(G2, digits=digits), ", p = ",
       format(pval,digits=digits), "\n", sep="")
-  cat("\nAIC: ",format(x$aic,digits=max(4,digits+1)),"\n")  # to summary.mpt
+  cat("\nAIC: ",format(AIC(x),digits=max(4,digits+1)),"\n")  # to summary.mpt
   cat("\n")
   invisible(x)
 }
@@ -181,7 +183,7 @@ anova.mpt <- function (object, ..., test=c("Chisq", "none")){
 logLik.mpt <- function(object, ...){
   if(length(list(...)))
       warning("extra arguments discarded")
-  p <- length(object$coefficient) - 1
+  p <- length(object$coefficient)
   val <- object$loglik
   attr(val, "df") <- p
   class(val) <- "logLik"
@@ -189,13 +191,47 @@ logLik.mpt <- function(object, ...){
 }
 
 
+## Residuals for mpt models
+residuals.mpt <- function(object, type=c("deviance", "pearson"), ...){
 
-## summary.mpt: put AIC here
+  dev.resids <- function(y, mu, wt)
+    2 * wt * (y * log(ifelse(y == 0, 1, y/mu)) - (y - mu))
 
-## residuals.mpt
+  type <- match.arg(type)
+  wts <- object$n
+  y <- object$y / wts
+  mu <- object$pcat
+  res <- switch(type,
+    deviance = if(object$goodness['df'] > 0){
+        d.res <- sqrt(pmax(dev.resids(y, mu, wts), 0))
+        ifelse(y > mu, d.res, -d.res)  # sign
+      }
+      else rep.int(0, length(mu)),
+    pearson = (y - mu) * sqrt(wts)/sqrt(mu)
+  )
+  if(!is.null(object$na.action)) res <- naresid(object$na.action, res)
+  res
+}
 
-## plot.mpt
+
+## Diagnostic plot for mpt models
+plot.mpt <- function(x, showID = TRUE,
+  xlab="Predicted response probabilities", ylab="Deviance residuals", ...){
+
+  xres <- resid(x)
+  mu   <- x$pcat
+  plot(mu, xres, xlab = xlab, ylab = ylab, type="n", ...)
+  abline(h = 0, lty = 2)
+  if(showID){
+    text(mu, xres, names(xres), cex=0.8)
+    panel.smooth(mu, xres, cex=0)
+  }else{
+    panel.smooth(mu, xres)
+  }
+}
+
 
 ## vcov
 
+## summary.mpt: put AIC here
 

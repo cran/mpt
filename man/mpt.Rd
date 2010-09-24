@@ -51,8 +51,8 @@ mpt(formula, data, treeid = "treeid", constr = NULL,
 
   Joint (or product) multinomial models consist of more than one processing
   tree.  The \code{treeid} should uniquely identify each tree.  The model
-  formula does not distinguish between joint and simple models.  All model
-  equations should go into a single list in the formula.
+  formula does not distinguish between joint and simple models: All model
+  equations should go into a single list.
   
   Parameter estimation is carried out by \code{\link{mptEM}} which implements
   the EM algorithm.
@@ -61,16 +61,19 @@ mpt(formula, data, treeid = "treeid", constr = NULL,
   \item{coefficients}{a vector of parameter estimates.}
   \item{fitted.values}{the fitted response frequencies.}
   \item{loglik}{the log-likelihood of the fitted model.}
-  \item{aic}{Akaike's information criterion for the fitted model.}
   \item{a}{structural constants passed to \code{\link{mptEM}}.}
   \item{b}{structural constants passed to \code{\link{mptEM}}.}
   \item{c}{structural constants passed to \code{\link{mptEM}}.}
   \item{goodness.of.fit}{the goodness of fit statistic including the
     likelihood ratio fitted vs. saturated model (G2), the degrees of
     freedom, and the p-value of the corresponding chi-square distribution.}
+  \item{iter}{the number of iterations of the EM algorithm.}
   \item{pcat}{the predicted probabilities for each response category.}
+  \item{pbranch}{the predicted probabilities for each branch in the tree.}
   \item{formula}{the model formula.}
   \item{ntrees}{the number of trees in a joint multinomial model.}
+  \item{n}{the total number of observations per tree.}
+  \item{y}{the vector of response frequencies.}
 }
 \references{
   Batchelder, W.H. & Riefer, D.M. (1999).
@@ -88,7 +91,10 @@ mpt(formula, data, treeid = "treeid", constr = NULL,
 }
 \author{Florian Wickelmaier}
 \seealso{
-  \code{\link{mptEM}}, \code{\link{retroact}}, \code{\link{logLik.mpt}}.
+  \code{\link{mptEM}},
+  \code{\link{retroact}}, \code{\link{proact}},
+  \code{\link{plot.mpt}}, \code{\link{residuals.mpt}},
+  \code{\link{logLik.mpt}}.
 }
 \examples{
 ## Storage-retrieval model for pair clustering (Riefer & Batchelder, 1988)
@@ -103,8 +109,9 @@ mpt1 <- mpt(freq ~ list(
   1 - u
 ), retroact[retroact$lists == 0,])
 
-print(mpt1)
+print(mpt1)  # parameter estimates, goodness of fit
+plot(mpt1)   # residuals versus predicted values
 
-## See ?retroact for further examples.
+## See ?retroact and ?proact for further examples.
 }
 \keyword{models}

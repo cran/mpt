@@ -14,22 +14,22 @@
   lists.  Subjects were given up to 5 min for this final written recall.
   
   The focus here is on the recall of the first-list words during the final
-  recall task.  Subjects responses were classified into six response
-  categories and pooled across subjects.
+  recall task.  The responses were classified into six categories and pooled
+  across subjects.
 }
 \usage{data(retroact)}
 \format{
   A data frame consisting of four variables:
   \describe{
-    \item{\code{lists}}{the number of interpolated lists}
+    \item{\code{lists}}{the number of interpolated lists.}
     \item{\code{treeid}}{an identifier for the single trees of the joint
-      multinomial model}
-    \item{\code{resp}}{a factor giving the response category; \code{n1}
-      pair is recalled adjacently, \code{n2} pair is recalled non-adjacently,
-      \code{n3} one word in a pair is recalled, \code{n4} neither word in a
-      pair is recalled, \code{m1} recall of a singleton, \code{m2} non-recall
-      of a singleton}
-    \item{\code{freq}}{the aggregate recall frequencies per condition}
+      multinomial model.}
+    \item{\code{resp}}{a factor giving the response category; \code{E1}
+      pair is recalled adjacently, \code{E2} pair is recalled non-adjacently,
+      \code{E3} one word in a pair is recalled, \code{E4} neither word in a
+      pair is recalled, \code{F1} recall of a singleton, \code{F2} non-recall
+      of a singleton.}
+    \item{\code{freq}}{the aggregate recall frequencies per condition.}
   }
 }
 \source{
