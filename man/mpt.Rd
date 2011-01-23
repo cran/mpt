@@ -2,6 +2,9 @@
 \alias{mpt}
 \alias{print.mpt}
 \alias{anova.mpt}
+\alias{vcov.mpt}
+\alias{summary.mpt}
+\alias{print.summary.mpt}
 \title{Multinomial Processing Tree (MPT) Models}
 \description{Fits a (joint) multinomial processing tree model using the EM
   algorithm.
@@ -9,6 +12,8 @@
 \usage{
 mpt(formula, data, treeid = "treeid", constr = NULL,
   start = rep(0.5, length(all.vars(formula[[3]]))), \dots)
+
+\method{summary}{mpt}(object, \dots)
 
 \method{anova}{mpt}(object, \dots, test = c("Chisq", "none"))
 }
@@ -109,8 +114,14 @@ mpt1 <- mpt(freq ~ list(
   1 - u
 ), retroact[retroact$lists == 0,])
 
-print(mpt1)  # parameter estimates, goodness of fit
-plot(mpt1)   # residuals versus predicted values
+summary(mpt1)  # parameter estimates, goodness of fit
+plot(mpt1)     # residuals versus predicted values
+confint(mpt1)  # approximate confidence intervals
+
+plot(mpt1$coef, axes=FALSE, ylim=0:1, pch=16, xlab="",
+  ylab="Parameter estimate (MPT model, 95\% CI)")
+axis(1, 1:3, names(mpt1$coef)); axis(2)
+arrows(1:3, confint(mpt1)[,1], 1:3, confint(mpt1)[,2], .05, 90, 3)
 
 ## See ?retroact and ?proact for further examples.
 }

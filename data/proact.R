@@ -9,9 +9,10 @@ proact <- data.frame(
              40, 91, 12, 37,
              50, 98,  7, 25,
              25, 58, 29, 68,
-             28, 97, 10, 21,
+             28, 97, 18, 37,
              52, 97, 10, 21)
 )
 
 proact$treeid <- with(proact, interaction(test, abpres))
+proact$treeid <- factor(proact$treeid, levels = unique(proact$treeid))
 

@@ -96,7 +96,7 @@ mptEM <- function(theta, data, a, b, c, maxit = 1000, tolerance = 1e-8,
     if(verbose) print(c(iter, loglik0))
 
     ## E step
-    for(i in 1:nbranch)
+    for(i in seq_len(nbranch))
       for(j in seq_along(data))
         pbranch[i, j] <- c[i,j] * prod(theta^a[i,j,] * (1 - theta)^b[i,j,])
     
@@ -132,7 +132,6 @@ print.mpt <- function(x, digits=max(3, getOption("digits")-3),
   cat("\nGoodness of fit (2 log likelihood ratio):\n")
   cat("\tG2(", df, ") = ", format(G2, digits=digits), ", p = ",
       format(pval,digits=digits), "\n", sep="")
-  cat("\nAIC: ",format(AIC(x),digits=max(4,digits+1)),"\n")  # to summary.mpt
   cat("\n")
   invisible(x)
 }
@@ -231,7 +230,92 @@ plot.mpt <- function(x, showID = TRUE,
 }
 
 
-## vcov
+## Covariance matrix for MPT model parameters
+vcov.mpt <- function(object, ...){
+  a       <- object$a
+  b       <- object$b
+  y       <- object$y
+  pcat    <- object$pcat
+  pbranch <- object$pbranch
+  theta   <- coef(object)
 
-## summary.mpt: put AIC here
+  ## as(Theta), bs(Theta)
+  as.t <- bs.t <- numeric(length(theta))
+  for(s in seq_along(theta)){
+    for(j in seq_along(pcat)){
+      as.t[s] <- as.t[s] + y[j]*sum(a[,j,s]*pbranch[,j]/pcat[j], na.rm=TRUE)
+      bs.t[s] <- bs.t[s] + y[j]*sum(b[,j,s]*pbranch[,j]/pcat[j], na.rm=TRUE)
+    }
+  }
+  
+  ## d as(Theta)/d t, d bs(Theta)/d t
+  das.t <- dbs.t <- matrix(0, length(theta), length(theta))
+  for(s in seq_along(theta)){
+    for(r in seq_along(theta)){
+      for(j in seq_along(pcat)){
+        das.t[s, r] <- das.t[s, r] + y[j] * (
+        sum(a[,j,s] * pbranch[,j] *
+          sum((a[,j,r]/theta[r] - b[,j,r]/(1 - theta[r])) * pbranch[,j],
+            na.rm = TRUE) /
+          pcat[j]^2, na.rm = TRUE) -
+        sum(a[,j,s] *
+          (a[,j,r]/theta[r] - b[,j,r]/(1 - theta[r])) * pbranch[,j] / pcat[j],
+          na.rm = TRUE)
+        )
+  
+        dbs.t[s, r] <- dbs.t[s, r] + y[j] * (
+        sum(b[,j,s] * pbranch[,j] *
+          sum((a[,j,r]/theta[r] - b[,j,r]/(1 - theta[r])) * pbranch[,j],
+           na.rm = TRUE) /
+          pcat[j]^2, na.rm = TRUE) -
+        sum(b[,j,s] *
+          (a[,j,r]/theta[r] - b[,j,r]/(1 - theta[r])) * pbranch[,j] / pcat[j],
+          na.rm = TRUE)
+        )
+      }
+    }
+  }
+  
+  ## I(Theta)
+  info.t <- das.t/theta - dbs.t/(1 - theta) +
+            diag(as.t/theta^2 + as.t/(1 - theta)^2)
+  dimnames(info.t) <- list(names(theta), names(theta))
+  solve(info.t)
+}
+
+
+summary.mpt <- function(object, ...){
+  object -> x
+  coef <- coef(x)
+
+  ## Catch vcov error, so there are at least some NA's in the summary
+  s.err <- tryCatch(sqrt(diag(vcov(x))),
+    error = function(e) rep(NA, length(coef)))
+
+  tvalue <- coef / s.err
+  pvalue <- 2 * pnorm(-abs(tvalue))
+  dn <- c("Estimate", "Std. Error")
+  coef.table <- cbind(coef, s.err, tvalue, pvalue)
+  dimnames(coef.table) <- list(names(coef), c(dn, "z value", "Pr(>|z|)"))
+
+  aic <- AIC(x)
+  ans <- list(coefficients=coef.table, aic=aic, gof=x$goodness.of.fit,
+    X2=sum(resid(x, "pearson")^2))
+  class(ans) <- "summary.mpt"
+  return(ans)
+}
+
+
+print.summary.mpt <- function(x, digits=max(3, getOption("digits")-3),
+  na.print="", signif.stars=getOption("show.signif.stars"), ...){
+  cat("\nCoefficients:\n")
+  printCoefmat(x$coef, digits = digits, signif.stars = signif.stars, ...)
+  cat("\nGoodness of fit:\n")
+  cat("Likelihood ratio G2:", format(x$gof[1], digits=digits), "on",
+    x$gof[2], "df,", "p-value:", format(x$gof[3], digits=digits), "\n")
+  cat("Pearson X2:", format(x$X2, digits=digits), "\n")
+  cat("AIC:", format(x$aic, digits=max(4, digits+1)))
+  cat("\n")
+  invisible(x)
+}
 

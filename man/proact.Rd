@@ -9,7 +9,7 @@
   syllables, responses of the numbers from 1 to 30, so list items looked
   like, say, ESI-12, JOK-3, MAL-8, etc.  Part of the items had two responses
   (A-B, A-C), the control items had only a single correct response.  If the
-  recall of C responses is poorer than the control items, then proactive
+  recall of C responses is poorer than that of control items, then proactive
   inhibition has occurred, that is interference with the recall by
   information that has been learned earlier.
   
@@ -34,13 +34,13 @@
   }
 }
 \source{
-  Riefer, D.M., & Batchelder, W.H. (1988).
-  Multinomial modeling and the measurement of cognitive processes.
-  \emph{Psychological Review}, \bold{95}, 318--339.
-
   Greeno, J.G., James, C.T., DaPolito, F, & Polson, P.G. (1978).
   \emph{Associative learning: A cognitive analysis}.
   Englewood Cliffs, NJ: Prentice-Hall.
+
+  Riefer, D.M., & Batchelder, W.H. (1988).
+  Multinomial modeling and the measurement of cognitive processes.
+  \emph{Psychological Review}, \bold{95}, 318--339.
 }
 \examples{
 data(proact)
@@ -79,11 +79,12 @@ mpt1 <- mpt(freq ~ list(
 ), proact, maxit=2000, stepsize=1.175)
 
 mpt2 <- mpt(mpt1$formula, proact,
-  constr=list(q1 = c("q1","q2","q3"), q2 = c("q4","q5","q6")))
+  constr=list(q1 = c("q1","q2","q3"), q2 = c("q4","q5","q6")),
+  start=coef(mpt1))
 
 mpt3 <- mpt(mpt1$formula, proact,
   constr=list(r1 = c("r1","r2","r3"), r2 = c("r4","r5","r6")),
-  start=coef(mpt1), maxit=2500, stepsize=1.8)
+  start=coef(mpt1), stepsize=1.9)
 
 anova(mpt2, mpt1)  # q increases with number of A-B presentations
 anova(mpt3, mpt1)  # r remains constant

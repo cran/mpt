@@ -1,3 +1,12 @@
+Changes in 0.3-0
+
+  * BUG FIX: two frequencies in the proact data set were incorrect
+  * vcov.mpt (new function): covariance matrix of mpt model parameters
+  * summary.mpt (new function): summary method for mpt objects
+  * mpt.Rd (examples): update
+  * proact.Rd (examples): update
+  * DESCRIPTION (Date, Version): 0.3-0
+
 Changes in 0.2-0
 
   * BUG FIX: df in logLik.mpt was incorrect by one
