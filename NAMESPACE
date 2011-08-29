@@ -1,0 +1,20 @@
+import(
+  "stats"
+)
+
+export(
+  "mpt",
+  "mptEM",
+  "mptmodel"
+)
+
+S3method("print", "mpt")
+S3method("anova", "mpt")
+S3method("logLik", "mpt")
+S3method("residuals", "mpt")
+S3method("plot", "mpt")
+S3method("vcov", "mpt")
+S3method("summary", "mpt")
+S3method("print", "summary.mpt")
+S3method("simulate", "mpt")
+

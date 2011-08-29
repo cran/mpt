@@ -31,7 +31,7 @@ data(retroact)                      # retroactive inhibition data
 mpt1 <- mpt(freq ~ list(            # fit storage-retrieval model
   c*r,
   (1 - c)*u^2,
-  2*(1 - c)*u*(1- u),
+  2*(1 - c)*u*(1 - u),
   c*(1 - r) + (1 - c)*(1 - u)^2,
   u,
   1 - u

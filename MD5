@@ -1,0 +1,15 @@
+ecedbac18d3c0ba794754eef9a68860d *ChangeLog
+f4510ab2901435f876c3f1e0ab218a1d *DESCRIPTION
+787b6fa4b948f1a87e296343bdc6e397 *NAMESPACE
+0936d3f5d525cb55fd32731032ae544b *R/mpt.R
+695ab345dbf8ed66a92861b06626ce9c *data/proact.rda
+487de12f8ab4d1b845f3879d00d4fea4 *data/retroact.rda
+2ed749d39e4e02a1212b059f66bcbbf3 *man/logLik.mpt.Rd
+98947140d2b50f6fe7745516e6fbec21 *man/mpt.Rd
+78bb38aa96e60b8491b8c26055864f7d *man/mptEM.Rd
+d516b01bc48014a830811a4629d02b15 *man/mptmodel.Rd
+dd566fecd153548217a313247481beed *man/plot.mpt.Rd
+4fc63a9d8f1e5a170fc303567e1b9576 *man/proact.Rd
+87578fb580910845258a26b151e3f10e *man/residuals.mpt.Rd
+7d184e9781365d6366a25a6dfd27437c *man/retroact.Rd
+cb46e45f169b23ed89b6a2cbae15be40 *man/simulate.mpt.Rd

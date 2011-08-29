@@ -1,3 +1,11 @@
+Changes in 0.4-0
+
+  * simulate.mpt (new function): simulate responses from a fitted mpt model
+  * mptmodel (new function): return formulae for some prevalent MPT models
+  * mpt.R: mpt() function now takes dataframe or vector input
+  * NAMESPACE: new file
+  * DESCRIPTION (Date, Version): 0.4-0
+
 Changes in 0.3-0
 
   * BUG FIX: two frequencies in the proact data set were incorrect

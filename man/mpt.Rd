@@ -21,9 +21,11 @@ mpt(formula, data, treeid = "treeid", constr = NULL,
   \item{formula}{an object of class \code{formula}: a symbolic description of
     the model to be fitted.  (See Details and Examples.)}
   \item{data}{a data frame consisting at least of one variable that contains
-    the absolute response frequencies.}
+    the absolute response frequencies. Alternatively, a (named) vector of
+    frequencies.}
   \item{treeid}{name of the variable that identifies the processing trees
-    of a joint multinomial model.}
+    of a joint multinomial model. Alternatively, a vector that identifies each
+    tree.}
   \item{constr}{a named list of character vectors consisting of parameter
     names.  The parameters in each vector are constrained to be equal.}
   \item{start}{a vector of starting values for the parameter estimates.}
@@ -48,7 +50,7 @@ mpt(formula, data, treeid = "treeid", constr = NULL,
     \code{var ~ list(x + (1 - x)*y, (1 - x)*(1 - y), y, 1 - y, ...)}
   
   where the left hand side is the variable that contains the response
-  frequencies.  The right hand side gives the model parameters in a list.
+  frequencies.  The right hand side gives the model equations in a list.
   Each component of the list represents the probability of a response in the
   corresponding category (link probabilities are multiplied, branch
   probabilities are added).  Thus, the list usually has as many components as
@@ -96,7 +98,7 @@ mpt(formula, data, treeid = "treeid", constr = NULL,
 }
 \author{Florian Wickelmaier}
 \seealso{
-  \code{\link{mptEM}},
+  \code{\link{mptEM}}, \code{\link{mptmodel}},\code{\link{simulate.mpt}},
   \code{\link{retroact}}, \code{\link{proact}},
   \code{\link{plot.mpt}}, \code{\link{residuals.mpt}},
   \code{\link{logLik.mpt}}.
@@ -108,7 +110,7 @@ data(retroact)
 mpt1 <- mpt(freq ~ list(
   c*r,
   (1 - c)*u^2,
-  2*(1 - c)*u*(1- u),
+  2*(1 - c)*u*(1 - u),
   c*(1 - r) + (1 - c)*(1 - u)^2,
   u,
   1 - u

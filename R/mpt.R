@@ -61,9 +61,24 @@ mpt <- function(formula, data, treeid = "treeid", constr = NULL,
     dimnames(aa)[[3]] <- dimnames(bb)[[3]] <- as.list(names(theta))
   }
   
-  freq   <- data[,all.vars(formula[[2]])]
-  tid    <- if(treeid %in% names(data)) factor(data[,treeid])
-            else rep(1, nrow(data))
+  ## Either, 'data' is a dataframe
+  if(is.data.frame(data)){
+    freq <- data[,all.vars(formula[[2]])]
+    tid  <- if(length(treeid) == length(freq)) factor(treeid)
+            else if(length(treeid) == 1 && treeid %in% names(data))
+              factor(data[,treeid])
+            else rep(1, length(freq))
+
+  ## Or a vector of frequencies
+  }else{
+    ## Discard left hand side and substitute it by Y (max. 4095 bytes)
+    # formula <- reformulate(attr(terms(formula), "term.labels"), response="Y")
+    freq <- data
+    tid  <- if(length(treeid) == length(freq)) factor(treeid)
+            else if(length(names(freq)) == length(freq)) factor(names(freq))
+            else rep(1, length(freq))
+  }
+
   ncat   <- table(tid)
   ntrees <- length(ncat)
   n      <- tapply(freq, tid, sum)[as.character(tid)]
@@ -71,7 +86,7 @@ mpt <- function(formula, data, treeid = "treeid", constr = NULL,
   fit    <- mptEM(theta=theta, data=freq, a=aa, b=bb, c=cc, ...)
   loglik <- fit$loglik
   fitted <- n*fit$pcat
-  G2     <- 2*(sum(freq*log(freq/(fitted))))
+  G2     <- 2*sum(freq*log(freq/fitted), na.rm=TRUE)
   df     <- sum(ncat - 1) - length(theta)
   gof    <- c(G2=G2, df=df, pval = 1 - pchisq(G2, df))
 
@@ -168,7 +183,7 @@ anova.mpt <- function (object, ..., test=c("Chisq", "none")){
   out <- data.frame(Model = names(mlist), Resid.df = dfs, Deviance = lls,
                     Test = tss, Df = df, LRtest = x2, Prob = pr)
   names(out) <- c("Model", "Resid. df", "Resid. Dev", "Test",
-                  "   Df", "LR stat.", "Pr(Chi)")
+                  "   Df", "LR stat.", "Pr(>Chi)")
   rownames(out) <- 1:nt
   if (test == "none") out <- out[, 1:6]
   class(out) <- c("Anova", "data.frame")
@@ -285,7 +300,7 @@ vcov.mpt <- function(object, ...){
 
 
 summary.mpt <- function(object, ...){
-  object -> x
+  x <- object
   coef <- coef(x)
 
   ## Catch vcov error, so there are at least some NA's in the summary
@@ -299,8 +314,8 @@ summary.mpt <- function(object, ...){
   dimnames(coef.table) <- list(names(coef), c(dn, "z value", "Pr(>|z|)"))
 
   aic <- AIC(x)
-  ans <- list(coefficients=coef.table, aic=aic, gof=x$goodness.of.fit,
-    X2=sum(resid(x, "pearson")^2))
+  ans <- list(ntrees=x$ntrees, coefficients=coef.table, aic=aic,
+    gof=x$goodness.of.fit, X2=sum(resid(x, "pearson")^2))
   class(ans) <- "summary.mpt"
   return(ans)
 }
@@ -308,6 +323,7 @@ summary.mpt <- function(object, ...){
 
 print.summary.mpt <- function(x, digits=max(3, getOption("digits")-3),
   na.print="", signif.stars=getOption("show.signif.stars"), ...){
+  cat("\nNumber of trees:", x$ntrees, "\n")
   cat("\nCoefficients:\n")
   printCoefmat(x$coef, digits = digits, signif.stars = signif.stars, ...)
   cat("\nGoodness of fit:\n")
@@ -317,5 +333,98 @@ print.summary.mpt <- function(x, digits=max(3, getOption("digits")-3),
   cat("AIC:", format(x$aic, digits=max(4, digits+1)))
   cat("\n")
   invisible(x)
+}
+
+
+## Simulate responses from mpt model
+simulate.mpt <- function(object, nsim, seed, pool = TRUE, ...){
+
+  if(pool){
+    tid  <- names(object$fitted.values)
+    freq <- unlist( lapply(unique(tid),
+      function(i) rmultinom(1, object$n[i], object$pcat[tid == i])) )
+    names(freq) <- tid
+  }else{
+    stop("individual response simulation not yet implemented")
+  }
+  freq
+}
+
+
+## Formulae for some prevalent MPT models
+mptmodel <- function(which, replicates = 1, response = "freq"){
+
+  if(missing(which)){
+    modformula <- NULL
+
+  }else{
+    modformula <- switch(EXPR = which,
+      "1HT" = "list(
+        r + (1 - r)*b,
+        (1 - r)*(1 - b),
+        b,
+        1 - b
+      )",
+
+      "2HT" = "list(
+        r + (1 - r)*b,
+        (1 - r)*(1 - b),
+        (1 - d)*b,
+        (1 - d)*(1 - b) + d
+      )",
+
+      "PairAsso" = "list(
+        p*q*r,
+        p*q*(1 - r),
+        p*(1 - q)*r,
+        (1 - p) + p*(1 - q)*(1 - r)
+      )",
+
+      "SourceMon" = "list( 
+        D1*d1 + D1*(1 - d1)*g + (1 - D1)*b*g,
+        D1*(1 - d1)*(1 - g) + (1 - D1)*b*(1 - g),
+        (1 - D1)*(1 - b),
+        D2*(1 - d2)*g + (1 - D2)*b*g,
+        D2*d2 + D2*(1 - d2)*(1 - g) + (1 - D2)*b*(1 - g),
+        (1 - D2)*(1 - b),
+        b*g,
+        b*(1 - g),
+        1 - b
+      )",
+
+      "SR" = "list(
+        c*r,
+        (1 - c)*u^2,
+        2*(1 - c)*u*(1 - u),
+        c*(1 - r) + (1 - c)*(1 - u)^2,
+        u,
+        1 - u
+      )",
+
+      NULL  # Model not available
+    )
+  }
+
+  if(length(modformula) == 0){
+    cat("'which' has to be one of '1HT', '2HT', 'PairAsso', 'SourceMon',",
+        "'SR'.\n")
+    return(invisible(modformula))
+  }
+
+  modformula <- reformulate(modformula, response=response)
+
+  if(replicates > 1){
+    pat <- paste("([", paste(all.vars(modformula[[3]]), collapse=""), "])",
+                 sep="")
+    newform <- NULL
+    for(i in seq_len(replicates))
+      newform <- c(newform, gsub(pat, paste("\\1", i, sep=""),
+                   modformula[[3]])[-1])
+    modformula <- reformulate(newform, response=response)
+    modformula <- as.formula(paste(response, " ~ list(",
+                               paste(newform, collapse=", "), ")", sep=""))
+  }
+
+  modformula
 }
 
