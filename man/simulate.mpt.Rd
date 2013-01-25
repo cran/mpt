@@ -10,11 +10,11 @@
 }
 \arguments{
   \item{object}{an object of class \code{mpt}, typically the result of a
-    call to \code{\link{mpt}}}
-  \item{nsim}{currently not used}
-  \item{seed}{currently not used}
+    call to \code{\link{mpt}}.}
+  \item{nsim}{currently not used.}
+  \item{seed}{currently not used.}
   \item{pool}{logical, if TRUE (default), pooled responses (summed across
-    respondents) are returned}
+    respondents) are returned.}
   \item{\dots}{further arguments passed to or from other methods.
     None are used in this method.}
 }

@@ -99,8 +99,8 @@ mpt1 <- mpt(freq ~ list(
   1 - u4
 ), retroact)
 
-mpt2 <- mpt(mpt1$formula, retroact, constr=list(r = paste("r", 0:4, sep="")))
-mpt3 <- mpt(mpt1$formula, retroact, constr=list(c = paste("c", 0:4, sep="")))
+mpt2 <- mpt(mpt1$formula, retroact, constr=list(r = paste0("r", 0:4)))
+mpt3 <- mpt(mpt1$formula, retroact, constr=list(c = paste0("c", 0:4)))
 
 anova(mpt2, mpt1)  # r decreases the more lists have been interpolated
 anova(mpt3, mpt1)  # c remains constant

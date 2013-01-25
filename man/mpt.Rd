@@ -46,8 +46,9 @@ mpt(formula, data, treeid = "treeid", constr = NULL,
 
   Each row in \code{data} corresponds to one response category.  The model
   formula symbolically describes the model, for example it could look like
+  this
   
-    \code{var ~ list(x + (1 - x)*y, (1 - x)*(1 - y), y, 1 - y, ...)}
+    \code{var ~ list(x + (1 - x)*y, (1 - x)*(1 - y), y, 1 - y)}
   
   where the left hand side is the variable that contains the response
   frequencies.  The right hand side gives the model equations in a list.
@@ -81,6 +82,7 @@ mpt(formula, data, treeid = "treeid", constr = NULL,
   \item{ntrees}{the number of trees in a joint multinomial model.}
   \item{n}{the total number of observations per tree.}
   \item{y}{the vector of response frequencies.}
+  \item{nobs}{the number of free response categories.}
 }
 \references{
   Batchelder, W.H. & Riefer, D.M. (1999).
@@ -121,7 +123,7 @@ plot(mpt1)     # residuals versus predicted values
 confint(mpt1)  # approximate confidence intervals
 
 plot(mpt1$coef, axes=FALSE, ylim=0:1, pch=16, xlab="",
-  ylab="Parameter estimate (MPT model, 95\% CI)")
+     ylab="Parameter estimate (MPT model, 95\% CI)")
 axis(1, 1:3, names(mpt1$coef)); axis(2)
 arrows(1:3, confint(mpt1)[,1], 1:3, confint(mpt1)[,2], .05, 90, 3)
 

@@ -11,6 +11,7 @@ export(
 S3method("print", "mpt")
 S3method("anova", "mpt")
 S3method("logLik", "mpt")
+S3method("nobs", "mpt")
 S3method("residuals", "mpt")
 S3method("plot", "mpt")
 S3method("vcov", "mpt")

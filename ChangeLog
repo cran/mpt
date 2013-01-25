@@ -1,3 +1,12 @@
+Changes in 0.4-1
+
+  * BUG FIX: typo in vcov.mpt, hence wrong standard errors (reported by
+    Rainer Alexandrowicz and Bartosz Gula)
+  * recogROC (new data set): recognition memory data (Broeder & Schuetz, 2009)
+  * nobs.mpt (new function): extracts number of free response categories
+  * Add citation file: useR! 2011 talk
+  * DESCRIPTION (Date, Version): 0.4-1
+
 Changes in 0.4-0
 
   * simulate.mpt (new function): simulate responses from a fitted mpt model

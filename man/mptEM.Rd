@@ -41,15 +41,15 @@ mptEM(theta, data, a, b, c, maxit = 1000, tolerance = 1e-8,
   \item{iter}{the number of iterations of the algorithm.}
 }
 \references{
-  Hu, X., & Batchelder, W.H. (1994).
-  The statistical analysis of general processing tree models with the EM
-  algorithm.
-  \emph{Psychometrika}, \bold{59}, 21--47.
-
   Hu, X. (1999).
   Multinomial processing tree models: An implementation.
   \emph{Behavior Research Methods, Instruments, & Computers}, \bold{31},
   689--695.
+
+  Hu, X., & Batchelder, W.H. (1994).
+  The statistical analysis of general processing tree models with the EM
+  algorithm.
+  \emph{Psychometrika}, \bold{59}, 21--47.
 }
 \seealso{
   \code{\link{mpt}}.

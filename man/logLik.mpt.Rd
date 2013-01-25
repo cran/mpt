@@ -1,5 +1,6 @@
 \name{logLik.mpt}
 \alias{logLik.mpt}
+\alias{nobs.mpt}
 \title{Log-Likelihood of an mpt Object}
 \description{
   Returns the log-likelihood value of the (joint) multinomial processing
@@ -33,5 +34,6 @@ dat)
 
 logLik(mpt1)
 AIC(mpt1)
+BIC(mpt1)
 }
 \keyword{models}

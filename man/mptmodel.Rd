@@ -13,9 +13,9 @@ mptmodel(which, replicates = 1, response = "freq")
 \details{
   Currently implemented are the following models:
 
-  \code{1HT}: the one-high threshold model (see Erdfelder et al., 2009).
+  \code{1HT}: the one-high-threshold model (see Erdfelder et al., 2009).
 
-  \code{2HT}: the two-high threshold model (see Broeder & Schuetz, 2009).
+  \code{2HT}: the two-high-threshold model (see Broeder & Schuetz, 2009).
 
   \code{PairAsso}: the paired-associate learning model (Riefer & Batchelder,
     1988).
@@ -52,7 +52,9 @@ mptmodel(which, replicates = 1, response = "freq")
   \code{\link{mpt}}.
 }
 \examples{
-## Fit one-high threshold model to data in Broeder & Schuetz (2009)
+## Fit one-high-threshold model to data in Broeder & Schuetz (2009)
 mpt(mptmodel("1HT"), c(t=55, t=35, d=45, d=765))
+
+## See ?recogROC for further examples.
 }
 \keyword{models}

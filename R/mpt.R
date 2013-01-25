@@ -1,3 +1,7 @@
+# Jan/24/2013 BUG FIX: typo in vcov.mpt, hence wrong standard errors
+#             (reported by Rainer Alexandrowicz and Bartosz Gula)
+
+
 mpt <- function(formula, data, treeid = "treeid", constr = NULL,
   start = rep(0.5, length(all.vars(formula[[3]]))), ...){
 
@@ -21,19 +25,18 @@ mpt <- function(formula, data, treeid = "treeid", constr = NULL,
       for(s in seq_along(theta)){
         tname <- names(theta)[s]
   
-        aa[i,j,s] <- sum(grepl(paste("^", tname, "$", sep=""), pterms))
-        powix <- grepl(paste("^", tname, "\\^[0-9]+", sep=""), pterms)
+        aa[i,j,s] <- sum(grepl(paste0("^", tname, "$"), pterms))
+        powix <- grepl(paste0("^", tname, "\\^[0-9]+"), pterms)
         aa[i,j,s] <- sum(aa[i,j,s],
-          as.numeric(gsub(paste("^", tname, "\\^([0-9]+)", sep=""), "\\1",
+          as.numeric(gsub(paste0("^", tname, "\\^([0-9]+)"), "\\1",
             pterms)[powix]))
   
         ## Brackets () are optional
-        bb[i,j,s] <- sum(grepl(paste("^\\(?1-", tname, "\\)?$", sep=""),
-          pterms))
-        powix <- grepl(paste("^\\(1-", tname, "\\)\\^[0-9]+", sep=""), pterms)
+        bb[i,j,s] <- sum(grepl(paste0("^\\(?1-", tname, "\\)?$"), pterms))
+        powix <- grepl(paste0("^\\(1-", tname, "\\)\\^[0-9]+"), pterms)
         bb[i,j,s] <- sum(bb[i,j,s],
-          as.numeric(gsub(paste("^\\(1-", tname, "\\)\\^([0-9]+)", sep=""),
-          "\\1", pterms)[powix]))
+          as.numeric(gsub(paste0("^\\(1-", tname, "\\)\\^([0-9]+)"), "\\1",
+            pterms)[powix]))
       }
     }
   }
@@ -80,6 +83,7 @@ mpt <- function(formula, data, treeid = "treeid", constr = NULL,
   }
 
   ncat   <- table(tid)
+  nobs   <- sum(ncat - 1)
   ntrees <- length(ncat)
   n      <- tapply(freq, tid, sum)[as.character(tid)]
   
@@ -87,12 +91,13 @@ mpt <- function(formula, data, treeid = "treeid", constr = NULL,
   loglik <- fit$loglik
   fitted <- n*fit$pcat
   G2     <- 2*sum(freq*log(freq/fitted), na.rm=TRUE)
-  df     <- sum(ncat - 1) - length(theta)
+  df     <- nobs - length(theta)
   gof    <- c(G2=G2, df=df, pval = 1 - pchisq(G2, df))
 
   out <- list(coefficients=fit$theta, fitted.values=fitted, loglik=loglik,
     a=aa, b=bb, c=cc, goodness.of.fit=gof, iter=fit$iter, pcat=fit$pcat,
-    pbranch=fit$pbranch, formula=formula, ntrees=ntrees, n=n, y=freq)
+    pbranch=fit$pbranch, formula=formula, ntrees=ntrees, n=n, y=freq,
+    nobs=nobs)
   class(out) <- "mpt"
   out
 }
@@ -141,12 +146,12 @@ print.mpt <- function(x, digits=max(3, getOption("digits")-3),
   cat("Parameter estimates:\n")
   print.default(format(x$coefficients, digits = digits), print.gap = 2,
       quote = FALSE)
-  G2 <- x$goodness.of.fit[1]
-  df <- x$goodness.of.fit[2]
+  G2   <- x$goodness.of.fit[1]
+  df   <- x$goodness.of.fit[2]
   pval <- x$goodness.of.fit[3]
   cat("\nGoodness of fit (2 log likelihood ratio):\n")
   cat("\tG2(", df, ") = ", format(G2, digits=digits), ", p = ",
-      format(pval,digits=digits), "\n", sep="")
+      format(pval, digits=digits), "\n", sep="")
   cat("\n")
   invisible(x)
 }
@@ -197,12 +202,17 @@ anova.mpt <- function (object, ..., test=c("Chisq", "none")){
 logLik.mpt <- function(object, ...){
   if(length(list(...)))
       warning("extra arguments discarded")
-  p <- length(object$coefficient)
+  p <- length(object$coefficients)
   val <- object$loglik
   attr(val, "df") <- p
+  attr(val, "nobs") <- object$nobs
   class(val) <- "logLik"
   val
 }
+
+
+## Number of observations
+nobs.mpt <- function(object, ...) object$nobs
 
 
 ## Residuals for mpt models
@@ -281,7 +291,7 @@ vcov.mpt <- function(object, ...){
         dbs.t[s, r] <- dbs.t[s, r] + y[j] * (
         sum(b[,j,s] * pbranch[,j] *
           sum((a[,j,r]/theta[r] - b[,j,r]/(1 - theta[r])) * pbranch[,j],
-           na.rm = TRUE) /
+            na.rm = TRUE) /
           pcat[j]^2, na.rm = TRUE) -
         sum(b[,j,s] *
           (a[,j,r]/theta[r] - b[,j,r]/(1 - theta[r])) * pbranch[,j] / pcat[j],
@@ -293,7 +303,7 @@ vcov.mpt <- function(object, ...){
   
   ## I(Theta)
   info.t <- das.t/theta - dbs.t/(1 - theta) +
-            diag(as.t/theta^2 + as.t/(1 - theta)^2)
+            diag(as.t/theta^2 + bs.t/(1 - theta)^2)
   dimnames(info.t) <- list(names(theta), names(theta))
   solve(info.t)
 }
@@ -330,7 +340,7 @@ print.summary.mpt <- function(x, digits=max(3, getOption("digits")-3),
   cat("Likelihood ratio G2:", format(x$gof[1], digits=digits), "on",
     x$gof[2], "df,", "p-value:", format(x$gof[3], digits=digits), "\n")
   cat("Pearson X2:", format(x$X2, digits=digits), "\n")
-  cat("AIC:", format(x$aic, digits=max(4, digits+1)))
+  cat("AIC:", format(x$aic, digits=max(4, digits + 1)))
   cat("\n")
   invisible(x)
 }
@@ -414,15 +424,13 @@ mptmodel <- function(which, replicates = 1, response = "freq"){
   modformula <- reformulate(modformula, response=response)
 
   if(replicates > 1){
-    pat <- paste("([", paste(all.vars(modformula[[3]]), collapse=""), "])",
-                 sep="")
+    pat <- paste0("([", paste(all.vars(modformula[[3]]), collapse=""), "])")
     newform <- NULL
     for(i in seq_len(replicates))
-      newform <- c(newform, gsub(pat, paste("\\1", i, sep=""),
-                   modformula[[3]])[-1])
+      newform <- c(newform, gsub(pat, paste0("\\1", i), modformula[[3]])[-1])
     modformula <- reformulate(newform, response=response)
-    modformula <- as.formula(paste(response, " ~ list(",
-                               paste(newform, collapse=", "), ")", sep=""))
+    modformula <- as.formula(paste0(response, " ~ list(",
+                                    paste(newform, collapse=", "), ")"))
   }
 
   modformula
