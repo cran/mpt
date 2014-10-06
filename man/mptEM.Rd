@@ -6,7 +6,7 @@
 }
 \usage{
 mptEM(theta, data, a, b, c, maxit = 1000, tolerance = 1e-8, 
-  stepsize = 1, verbose = FALSE)
+      stepsize = 1, verbose = FALSE)
 }
 \arguments{
   \item{theta}{a vector of starting values for the parameter estimates.}
@@ -23,13 +23,20 @@ mptEM(theta, data, a, b, c, maxit = 1000, tolerance = 1e-8,
     iteration.}
 }
 \details{
-  Usually \code{mptEM} is automatically called by \code{\link{mpt}}.
+  Usually, \code{mptEM} is automatically called by \code{\link{mpt}}.
 
-  The algorithm applies to MPT models where the probabilities of the i-th
-  branch leading to the j-th category take the form
+  A prerequisite for the application of the EM algorithm is that the
+  probabilities of the i-th branch leading to the j-th category take the form
   \deqn{p_{ij}(\Theta) =
     c_{ij} \prod_{s = 1}^S \theta_s^{a_{ijs}} (1 - \theta_s)^{b_{ijs}},}
-  where \eqn{\Theta} is the parameter vector.
+  where \eqn{\Theta} is the parameter vector, and \eqn{a_{ijs}} and
+  \eqn{b_{ijs}} count the occurrences of \eqn{\vartheta_s} or
+  \eqn{1 - \vartheta_s} in a branch, and \eqn{c_{kj}} is a nonnegative real
+  number.  The branch probabilities sum up to the total probability of a given
+  category, \eqn{p_j = p_{1j} + \dots + p_{Ij}}.  This is the structural
+  restriction of the class of MPT models that can be represented by binary
+  trees.  Other model types have to be suitably reparameterized for the
+  algorithm to apply.
 
   See Hu and Batchelder (1994) and Hu (1999) for details on the algorithm.
 }
@@ -53,5 +60,10 @@ mptEM(theta, data, a, b, c, maxit = 1000, tolerance = 1e-8,
 }
 \seealso{
   \code{\link{mpt}}.
+}
+\examples{
+## Fit storage-retrieval model to data in Riefer et al. (2002)
+spec <- mptspec("SR2")
+mpt1 <- mpt(spec, c(243, 64, 58, 55), method = "EM")
 }
 \keyword{models}

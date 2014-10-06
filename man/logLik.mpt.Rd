@@ -1,6 +1,7 @@
 \name{logLik.mpt}
 \alias{logLik.mpt}
 \alias{nobs.mpt}
+\alias{deviance.mpt}
 \title{Log-Likelihood of an mpt Object}
 \description{
   Returns the log-likelihood value of the (joint) multinomial processing
@@ -24,16 +25,11 @@
   \code{\link{mpt}}, \code{\link{logLik.lm}}, \code{\link{AIC}}.
 }
 \examples{
-dat <- data.frame(freq = c(243, 64, 58, 55))  # from Riefer et al. (2002)
-mpt1 <- mpt(freq ~ list(
-  c*r,
-  (1 - c)*u^2,
-  2*(1 - c)*u*(1- u),
-  c*(1 - r) + (1 - c)*(1 - u)^2),
-dat)
-
+mpt1 <- mpt(mptspec("SR2"), c(243, 64, 58, 55)) # from Riefer et al. (2002)
 logLik(mpt1)
 AIC(mpt1)
 BIC(mpt1)
+deviance(mpt1)
+nobs(mpt1)
 }
 \keyword{models}

@@ -20,13 +20,13 @@
 }
 \usage{data(proact)}
 \format{
-  A data frame consisting of four variables:
+  A data frame consisting of five variables:
   \describe{
     \item{\code{test}}{first or second test.}
     \item{\code{abpres}}{the number of A-B presentations.}
     \item{\code{resp}}{a factor giving the response category; \code{BC}
       both B and C responses are correctly recalled, \code{Bc} only B is
-      recalled, \code{cB} only C is recalled, \code{bc} neither response is
+      recalled, \code{bC} only C is recalled, \code{bc} neither response is
       recalled.}
     \item{\code{freq}}{the aggregate recall frequencies per condition.}
     \item{\code{treeid}}{an identifier for the single trees of the joint
@@ -46,7 +46,7 @@
 data(proact)
 
 ## Testing hypotheses about the parameters
-mpt1 <- mpt(freq ~ list(
+mpt1 <- mpt(mptspec(
   p1*q1*r1,
   p1*q1*(1 - r1),
   p1*(1 - q1)*r1,
@@ -76,15 +76,12 @@ mpt1 <- mpt(freq ~ list(
   p6*q6*(1 - r6),
   p6*(1 - q6)*r6,
   (1 - p6) + p6*(1 - q6)*(1 - r6)
-), proact, maxit=2000, stepsize=1.175)
+), proact)
 
-mpt2 <- mpt(mpt1$formula, proact,
-  constr=list(q1 = c("q1","q2","q3"), q2 = c("q4","q5","q6")),
-  start=coef(mpt1))
-
-mpt3 <- mpt(mpt1$formula, proact,
-  constr=list(r1 = c("r1","r2","r3"), r2 = c("r4","r5","r6")),
-  start=coef(mpt1), stepsize=1.9)
+mpt2 <- mpt(update(mpt1$spec, .restr=list(q2=q1, q3=q1, q4=q2, q5=q2, q6=q2)),
+            proact)
+mpt3 <- mpt(update(mpt1$spec, .restr=list(r2=r1, r3=r1, r4=r2, r5=r2, r6=r2)),
+            proact)
 
 anova(mpt2, mpt1)  # q increases with number of A-B presentations
 anova(mpt3, mpt1)  # r remains constant

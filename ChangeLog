@@ -1,6 +1,25 @@
+Changes in 0.5-0
+
+  * User-visible changes: MPT models are now specified via the new mptspec()
+    function. Its return value serves as an input to mpt() which fits the
+    model to data. It allows for more flexible parameter restrictions than the
+    earlier mechanism. It includes all the default MPT models (plus new ones)
+    that were formerly returned by the (now defunct) mptmodel() function. See
+    ?mptspec and ?mpt for details.
+  * coef.mpt, vcov.mpt, confint.mpt: new logical argument logit to switch
+    between logit-scale and probability-scale representation
+  * mpt: new argument method = c("BFGS", "EM") to select the fitting method
+  * vcov.mpt: new argument what = c("vcov", "fisher") to return either the
+    covariance matrix or the Fisher information
+  * predict.mpt (new function): predicted response frequencies or
+    probabilities for a given MPT model and optionally new data
+  * valence (new data set): word valence and source memory for vertical
+    position
+  * DESCRIPTION (Date, Version): 0.5-0
+
 Changes in 0.4-1
 
-  * BUG FIX: typo in vcov.mpt, hence wrong standard errors (reported by
+  * BUG FIX: typo in vcov.mpt(), hence wrong standard errors (reported by
     Rainer Alexandrowicz and Bartosz Gula)
   * recogROC (new data set): recognition memory data (Broeder & Schuetz, 2009)
   * nobs.mpt (new function): extracts number of free response categories
@@ -26,7 +45,7 @@ Changes in 0.3-0
 
 Changes in 0.2-0
 
-  * BUG FIX: df in logLik.mpt was incorrect by one
+  * BUG FIX: df in logLik.mpt() was incorrect by one
   * residuals.mpt (new function): residuals for MPT models
   * plot.mpt (new function): plots MPT residuals against fitted values
   * proact (new data set): recall frequencies for DaPolito's experiment on

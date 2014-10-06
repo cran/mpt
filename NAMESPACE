@@ -5,17 +5,25 @@ import(
 export(
   "mpt",
   "mptEM",
-  "mptmodel"
+  "mptspec"
 )
 
-S3method("print", "mpt")
 S3method("anova", "mpt")
+S3method("coef", "mpt")
+S3method("confint", "mpt")
+S3method("deviance", "mpt")
 S3method("logLik", "mpt")
 S3method("nobs", "mpt")
-S3method("residuals", "mpt")
 S3method("plot", "mpt")
+S3method("predict", "mpt")
+S3method("print", "mpt")
+S3method("residuals", "mpt")
+S3method("simulate", "mpt")
 S3method("vcov", "mpt")
+
 S3method("summary", "mpt")
 S3method("print", "summary.mpt")
-S3method("simulate", "mpt")
+
+S3method("print", "mptspec")
+S3method("update", "mptspec")
 

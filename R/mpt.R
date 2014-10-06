@@ -1,111 +1,186 @@
 # Jan/24/2013 BUG FIX: typo in vcov.mpt, hence wrong standard errors
 #             (reported by Rainer Alexandrowicz and Bartosz Gula)
+#
+# Dec/15/2013: simplify exctraction of EM constants (a, b, c)
+#
+# Sep/10/2014: new infrastructure, mptspec(), mpt(..., method = "BFGS")
 
 
-mpt <- function(formula, data, treeid = "treeid", constr = NULL,
-  start = rep(0.5, length(all.vars(formula[[3]]))), ...){
+## Fit MPT model via maximum likelihood (BFGS or EM)
+mpt <- function(spec, data, start = NULL, method = c("BFGS", "EM"),
+         treeid = "treeid", freqvar = "freq",
+         optimargs =
+           if(method == "BFGS") list(control =
+             list(reltol = .Machine$double.eps^(1/1.2), maxit = 1000))
+           else list())
+{
+  stopifnot(class(spec) == "mptspec")
 
-  theta <- start                           # starting values
-  names(theta) <- all.vars(formula[[3]])
+  ## Either, 'data' is a dataframe
+  if(is.data.frame(data)) {
+    y <- data[, freqvar]
+    tid <- if(length(treeid) == length(y)) factor(treeid)
+           else if(length(treeid) == 1 && treeid %in% names(data))
+             factor(data[, treeid])
+           else if(length(names(spec$prob)) == length(y))  # read from spec
+             factor(gsub("^(.+)\\..*", "\\1", names(spec$prob)))
+           else rep(1, length(y))
+    data <- matrix(y, nrow=1L)
 
-  ## Extract model structure from formula
-  aa <- bb <- array(NA,
-    c(max(sapply(gregexpr("\\+", formula[[3]]), function(x) sum(x > 0))) + 1,
-      length(formula[[3]]) - 1, length(theta)))
-  cc <- matrix(1, dim(aa)[1], dim(aa)[2])
+  ## Or a matrix/vector of frequencies
+  } else {
+    ## sanity checking and reordering of data
+    if(is.null(dim(data))) data <- matrix(data, nrow=1L,
+                                          dimnames=list(NULL, names(data)))
+    if(!is.null(dnam <- colnames(data)) & !is.null(snam <- names(spec$prob))){
+      if(!all(snam == dnam)) warning("variable names do not match")
+      # if(!all(snam %in% dnam)) {
+      #   warning("variable names do not match")
+      # } else {
+      #   data <- data[, snam, drop = FALSE]
+      # }
+    }
+    tid <- if(length(treeid) == NCOL(data)) factor(treeid)
+           else if(length(names(spec$prob)) == NCOL(data))
+             factor(gsub("^(.+)\\..*", "\\1", names(spec$prob)))
+           else if(!is.null(colnames(data)))
+             factor(gsub("^(.+)\\..*", "\\1", colnames(data))) # before 1st dot
+           else rep(1, NCOL(data))
+  }
+  if(NCOL(data) != length(spec$prob))
+    stop("number of response categories and model equations do not match")
+
+  ## for fitting only sums are needed
+  y <- colSums(data)
   
-  terms <- strsplit(as.character(formula[[3]][-1]), "\\+")
-  terms <- lapply(terms, function(x) gsub(" ", "", x))    # remove white space
+  method <- match.arg(method)
+  ## determine number of parameters and starting values (on prob scale)
+  if(is.null(start)) {
+    start <- spec$par[is.na(spec$par)]  # FIX ME: is.na still necessary?
+    start[] <- if (method == "EM") 0.5 else 0  # completely ad hoc
+  } else {
+    ## do sanity checking of starting values/names/etc., log-transform
+    if(is.null(names(start))) names(start) <- names(spec$par[is.na(spec$par)])
+  }
+
+  if (method == "BFGS") {
+
+    ## set up log-likelihood and gradient
+    nll <- function(par) -sum(y * log(spec$par2prob(plogis(par))))
+    grad <- function(par) {
+      yp <- drop(y/spec$par2prob(plogis(par)))
+      dp <- spec$par2deriv(plogis(par))$deriv
+      -drop(dp %*% yp) * dlogis(par)  # FIX ME: dlogis(par) optional? Ask Z.
+    }
   
-  for(j in 1:dim(aa)[2]){
-    for(i in 1:sapply(terms, length)[j]){
-      pterms <- strsplit(terms[[j]][i], "\\*")[[1]]
-      cval <- sum(as.numeric(grep("^[0-9]+$", pterms, value=TRUE)))
-      if(cval > 0) cc[i,j] <- cval
-      for(s in seq_along(theta)){
-        tname <- names(theta)[s]
-  
-        aa[i,j,s] <- sum(grepl(paste0("^", tname, "$"), pterms))
-        powix <- grepl(paste0("^", tname, "\\^[0-9]+"), pterms)
-        aa[i,j,s] <- sum(aa[i,j,s],
-          as.numeric(gsub(paste0("^", tname, "\\^([0-9]+)"), "\\1",
-            pterms)[powix]))
-  
-        ## Brackets () are optional
-        bb[i,j,s] <- sum(grepl(paste0("^\\(?1-", tname, "\\)?$"), pterms))
-        powix <- grepl(paste0("^\\(1-", tname, "\\)\\^[0-9]+"), pterms)
-        bb[i,j,s] <- sum(bb[i,j,s],
-          as.numeric(gsub(paste0("^\\(1-", tname, "\\)\\^([0-9]+)"), "\\1",
-            pterms)[powix]))
+    optArgs <- list(par=start, fn=nll, gr=grad, method="BFGS")
+    optArgs <- c(optArgs, as.list(optimargs))
+    opt <- do.call(optim, optArgs)
+    # opt <- optim(start, nll, gr = grad, method = "BFGS",
+    #   control = list(reltol = .Machine$double.eps^(1/1.2), maxit = 1000))
+    coef <- opt$par
+    loglik <- -opt$value
+    pcat <- spec$par2prob(plogis(coef))
+    aa <- bb <- cc <- NULL
+ 
+  # } else if (method == "BFGS") {
+  #   opt <- optim(start, nll, gr = grad, method = "BFGS",
+  #     control = list(reltol = .Machine$double.eps^(1/1.2), maxit = 1000))
+
+  #   coef <- plogis(opt$par)
+  #   vc <- solve(H(coef))
+  #   loglik <- -sum(log(spec$par2prob(coef)) * y)
+
+  } else {  # EM
+
+    ## From mpt package: get constants for EM algorithm
+    terms <- sapply(lapply(spec$prob, as.character), strsplit, "\\+")  # "+"
+    terms <- lapply(terms, function(x) gsub(" ", "", x))  # remove white space
+
+    aa <- bb <- array(NA, c(max(sapply(terms, length)),   # max paths to categ
+                            length(terms),                # n categories
+                            length(start)))               # n pars
+    cc <- matrix(1, dim(aa)[1], dim(aa)[2])
+
+    for(j in 1:dim(aa)[2]){
+      for(i in 1:sapply(terms, length)[j]){
+        pterms <- strsplit(terms[[j]][i], "\\*")[[1]]
+        # cval <- sum(as.numeric(grep("^[0-9]+$", pterms, value=TRUE)))
+        # cval <- prod(as.numeric(grep("^[.0-9]+$", pterms, value=TRUE)))
+        # cval <- prod(sapply(parse(text=pterms),
+        cc[i, j] <- prod(sapply(parse(text=pterms),
+            function(x) tryCatch(as.numeric(eval(x)), error=function(e) NA)),
+            na.rm=TRUE)
+
+        # if(cval >= 0) cc[i, j] <- cval  # >= ?, necessary?
+        for(s in seq_along(start)){
+          tname <- names(start)[s]
+
+          aa[i, j, s] <- sum(grepl(paste0("^", tname, "$"), pterms))
+          powix <- grepl(paste0("^", tname, "\\^[0-9]+"), pterms)
+          aa[i, j, s] <- sum(aa[i, j, s],
+            as.numeric(gsub(paste0("^", tname, "\\^([0-9]+)"), "\\1",
+                            pterms)[powix]))
+
+          ## Brackets () are optional
+          bb[i, j, s] <- sum(grepl(paste0("^\\(?1-", tname, "\\)?$"), pterms))
+          powix <- grepl(paste0("^\\(1-", tname, "\\)\\^[0-9]+"), pterms)
+          bb[i, j, s] <- sum(bb[i, j, s],
+            as.numeric(gsub(paste0("^\\(1-", tname, "\\)\\^([0-9]+)"), "\\1",
+                            pterms)[powix]))
+        }
       }
     }
-  }
-  dimnames(aa)[[3]] <- dimnames(bb)[[3]] <- as.list(names(theta))
+    dimnames(aa)[[3]] <- dimnames(bb)[[3]] <- as.list(names(start))
 
-  ## Constraints
-  if(length(constr) > 0){
-    theta.old <- theta
-    unconstr  <- setdiff(names(theta.old), unlist(constr))
-    theta     <- theta.old[unconstr]
-    for(i in 1:length(constr)) theta <- c(theta, mean(theta.old[constr[[i]]]))
-    names(theta) <- c(names(theta.old[unconstr]), names(constr))
-
-    aa.old <- aa
-    aa     <- array(NA, c(dim(aa.old)[1:2], length(theta)))
-    aa[,,seq_along(unconstr)] <- aa.old[,,unconstr]
-    for(i in seq_along(constr))
-      aa[,,length(unconstr) + i] <- apply(aa.old[,,constr[[i]]], 1:2, sum)
-
-    bb.old <- bb
-    bb     <- array(NA, c(dim(bb.old)[1:2], length(theta)))
-    bb[,,seq_along(unconstr)] <- bb.old[,,unconstr]
-    for(i in seq_along(constr))
-      bb[,,length(unconstr) + i] <- apply(bb.old[,,constr[[i]]], 1:2, sum)
-    dimnames(aa)[[3]] <- dimnames(bb)[[3]] <- as.list(names(theta))
-  }
-  
-  ## Either, 'data' is a dataframe
-  if(is.data.frame(data)){
-    freq <- data[,all.vars(formula[[2]])]
-    tid  <- if(length(treeid) == length(freq)) factor(treeid)
-            else if(length(treeid) == 1 && treeid %in% names(data))
-              factor(data[,treeid])
-            else rep(1, length(freq))
-
-  ## Or a vector of frequencies
-  }else{
-    ## Discard left hand side and substitute it by Y (max. 4095 bytes)
-    # formula <- reformulate(attr(terms(formula), "term.labels"), response="Y")
-    freq <- data
-    tid  <- if(length(treeid) == length(freq)) factor(treeid)
-            else if(length(names(freq)) == length(freq)) factor(names(freq))
-            else rep(1, length(freq))
+    ## Call mptEM
+    optArgs <- list(theta=start, data=y, a=aa, b=bb, c=cc)
+    optArgs <- c(optArgs, as.list(optimargs))
+    opt <- do.call(mptEM, optArgs)
+    # opt <- mptEM(start, y, aa, bb, cc, ...)
+    coef <- opt$theta
+    loglik <- opt$loglik
+    pcat <- opt$pcat
   }
 
+  snam <- if(!is.null(names(spec$prob))) names(spec$prob)
+          else if(!is.null(colnames(data))) colnames(data)
+          else paste(tid, unlist(lapply(rle(as.character(tid))$lengths,
+                                        seq_len)), sep=".")
   ncat   <- table(tid)
   nobs   <- sum(ncat - 1)
   ntrees <- length(ncat)
-  n      <- tapply(freq, tid, sum)[as.character(tid)]
-  
-  fit    <- mptEM(theta=theta, data=freq, a=aa, b=bb, c=cc, ...)
-  loglik <- fit$loglik
-  fitted <- n*fit$pcat
-  G2     <- 2*sum(freq*log(freq/fitted), na.rm=TRUE)
-  df     <- nobs - length(theta)
+  n      <- setNames(tapply(y, tid, sum)[as.character(tid)], snam)
+  fitted <- n*pcat
+  G2     <- 2*sum(y*log(y/fitted), na.rm=TRUE)
+  df     <- nobs - length(coef)
   gof    <- c(G2=G2, df=df, pval = 1 - pchisq(G2, df))
 
-  out <- list(coefficients=fit$theta, fitted.values=fitted, loglik=loglik,
-    a=aa, b=bb, c=cc, goodness.of.fit=gof, iter=fit$iter, pcat=fit$pcat,
-    pbranch=fit$pbranch, formula=formula, ntrees=ntrees, n=n, y=freq,
-    nobs=nobs)
-  class(out) <- "mpt"
-  out
+  rval <- list(
+    coefficients = coef,
+    loglik = loglik,
+    nobs = nobs,         # nrow(data),
+    # df = length(start),
+    fitted = fitted,
+    goodness.of.fit=gof,
+    ntrees = ntrees,
+    n = n,
+    y = setNames(y, snam),
+    pcat = setNames(pcat, snam),
+    treeid = tid,
+    a = aa, b = bb, c = cc,
+    spec = spec,
+    method = method,
+    optim = opt
+  )
+  class(rval) <- "mpt"
+  return(rval)
 }
 
 
 ## EM algorithm
 mptEM <- function(theta, data, a, b, c, maxit = 1000, tolerance = 1e-8,
-  stepsize = 1, verbose = FALSE){
+                  stepsize = 1, verbose = FALSE){
   nbranch <- dim(a)[1]
   pbranch <- matrix(NA, nbranch, length(data))
   loglik0 <- -Inf
@@ -135,17 +210,113 @@ mptEM <- function(theta, data, a, b, c, maxit = 1000, tolerance = 1e-8,
   }
   if(iter >= maxit) warning("iteration maximum has been exceeded")
   out <- list(theta=theta, loglik=loglik1, pcat=pcat, pbranch=pbranch,
-    iter=iter)
+              iter=iter)
   out
 }
 
 
-print.mpt <- function(x, digits=max(3, getOption("digits")-3),
-  na.print="", ...){
+coef.mpt <- function(object, logit = FALSE, ...){
+  coef <- object$coefficients
+  if (logit) {
+    nm <- paste0("logit(", names(coef), ")")
+    if (object$method == "EM")
+      setNames(qlogis(coef), nm)
+    else
+      setNames(coef, nm)
+  } else {
+    if (object$method == "EM")
+      coef
+    else
+      plogis(coef)
+  }
+}
+
+
+vcov.mpt <- function(object, logit = FALSE, what = c("vcov", "fisher"),
+                     ...){
+  what <- match.arg(what)
+  coef <- coef(object, logit=logit)
+
+  # Negative Hessian (information) on probability scale.
+  # Which one is correct? Should be very similar. Stick with I.obs.
+  # %*% is slightly faster than sum( * )
+  H <- function(par, y = object$y, spec = object$spec,
+                type = c("observed", "estimated", "expected")){
+    pp  <- spec$par2prob(par)
+    yp  <- drop(y/pp)
+    dp  <- spec$par2deriv(par)$deriv
+    d2p <- spec$par2deriv(par)$deriv2
+    npar <- length(par)
+    H <- matrix(NA, npar, npar)
+    for (i in seq_len(npar))
+      for (j in i:npar)
+        switch(EXPR = match.arg(type),
+          observed =
+          H[i, j] <- yp %*% (dp[i, ]*dp[j, ]/pp - d2p[i, j, ]),
+        # H[i, j] <- sum(yp * (dp[i, ]*dp[j, ]/pp - d2p[i, j, ]))
+
+          estimated =
+          H[i, j] <- yp %*% (dp[i, ]*dp[j, ]/pp),
+        # H[i, j] <- sum(y*dp[i, ]*dp[j, ]/pp^2)
+        # H[i, j] <- sum(yp*dp[i, ]*dp[j, ]/pp)
+        # H[i, j] <- sum(yp/pp * dp[i, ]*dp[j, ])
+
+          # Only correct for single-tree models; for joint MPT models,
+          # calculate per-tree info and add them.
+          expected =
+          H[i, j] <- sum(y)*sum(dp[i, ]*dp[j, ]/pp)
+        )
+    H[lower.tri(H)] <- t(H)[lower.tri(H)]
+    dimnames(H) <- list(names(par), names(par))
+    H
+  }
+
+  if (logit) {  # delta method
+    # Note that plogis(x)*(1 - plogis(x)) == dlogis(x)
+    # Automatic dimnames for tcrossprod(...)
+    # Conjecture: the smaller the matrix the more reliable its inverse
+    # dhessian <- diag(1/(plogis(coef) * (1 - plogis(coef))), length(coef))
+    # dhessian %*% solve(H(plogis(coef))) %*% dhessian
+    # solve(tcrossprod(dlogis(coef)) * H(plogis(coef)))  # possibly singular
+    if (what == "vcov") 1/tcrossprod(dlogis(coef)) * solve(H(plogis(coef)))
+    else                  tcrossprod(dlogis(coef)) *       H(plogis(coef))
+  } else {
+    if (what == "vcov") solve(H(coef))
+    else                      H(coef)
+  }
+}
+
+
+## Based on stats::confint.default
+confint.mpt <- function(object, parm, level = 0.95, logit = TRUE, ...)
+{
+  cf <- coef(object, logit=logit)
+  pnames <- names(cf)
+  if (missing(parm)) 
+      parm <- pnames
+  else if (is.numeric(parm)) 
+      parm <- pnames[parm]
+  a <- (1 - level)/2
+  a <- c(a, 1 - a)
+  pct <- paste(format(100*a, trim=TRUE, scientific=FALSE, digits=3), "%")
+  fac <- qnorm(a)
+  ci <- array(NA, dim = c(length(parm), 2L), dimnames = list(parm, pct))
+  ses <- sqrt(diag(vcov(object, logit=logit)))[parm]
+  ci[] <- cf[parm] + ses %o% fac
+  ci
+}
+
+
+# logLik.mpt <- function(object, ...)
+#                    structure(object$loglik, df = object$df, class = "logLik")
+
+
+print.mpt <- function(x, digits = max(3, getOption("digits") - 3),
+                      logit=FALSE, ...){
   cat("\nMultinomial processing tree (MPT) models\n\n")
   cat("Parameter estimates:\n")
-  print.default(format(x$coefficients, digits = digits), print.gap = 2,
-      quote = FALSE)
+  print.default(format(coef(x, logit=logit), digits=digits), print.gap=2,
+                quote = FALSE)
   G2   <- x$goodness.of.fit[1]
   df   <- x$goodness.of.fit[2]
   pval <- x$goodness.of.fit[3]
@@ -158,7 +329,7 @@ print.mpt <- function(x, digits=max(3, getOption("digits")-3),
 
 
 anova.mpt <- function (object, ..., test=c("Chisq", "none")){
-  ## Adapted form anova.polr by Brian Ripley
+  ## Adapted form MASS::anova.polr by Brian Ripley
 
   test <- match.arg(test)
   dots <- list(...)
@@ -166,7 +337,7 @@ anova.mpt <- function (object, ..., test=c("Chisq", "none")){
       stop('anova is not implemented for a single "mpt" object')
   mlist <- list(object, ...)
   names(mlist) <- c(deparse(substitute(object)),
-    as.character(substitute(...[]))[2:length(mlist)])
+                    as.character(substitute(...[]))[2:length(mlist)])
   nt <- length(mlist)
   dflis <- sapply(mlist, function(x) x$goodness["df"])
   s <- order(dflis, decreasing = TRUE)
@@ -239,14 +410,14 @@ residuals.mpt <- function(object, type=c("deviance", "pearson"), ...){
 
 
 ## Diagnostic plot for mpt models
-plot.mpt <- function(x, showID = TRUE,
-  xlab="Predicted response probabilities", ylab="Deviance residuals", ...){
-
+plot.mpt <- function(x, showNames = TRUE,
+                     xlab="Predicted response probabilities",
+                     ylab="Deviance residuals", ...){
   xres <- resid(x)
   mu   <- x$pcat
   plot(mu, xres, xlab = xlab, ylab = ylab, type="n", ...)
   abline(h = 0, lty = 2)
-  if(showID){
+  if(showNames){
     text(mu, xres, names(xres), cex=0.8)
     panel.smooth(mu, xres, cex=0)
   }else{
@@ -255,93 +426,95 @@ plot.mpt <- function(x, showID = TRUE,
 }
 
 
-## Covariance matrix for MPT model parameters
-vcov.mpt <- function(object, ...){
-  a       <- object$a
-  b       <- object$b
-  y       <- object$y
-  pcat    <- object$pcat
-  pbranch <- object$pbranch
-  theta   <- coef(object)
-
-  ## as(Theta), bs(Theta)
-  as.t <- bs.t <- numeric(length(theta))
-  for(s in seq_along(theta)){
-    for(j in seq_along(pcat)){
-      as.t[s] <- as.t[s] + y[j]*sum(a[,j,s]*pbranch[,j]/pcat[j], na.rm=TRUE)
-      bs.t[s] <- bs.t[s] + y[j]*sum(b[,j,s]*pbranch[,j]/pcat[j], na.rm=TRUE)
-    }
-  }
-  
-  ## d as(Theta)/d t, d bs(Theta)/d t
-  das.t <- dbs.t <- matrix(0, length(theta), length(theta))
-  for(s in seq_along(theta)){
-    for(r in seq_along(theta)){
-      for(j in seq_along(pcat)){
-        das.t[s, r] <- das.t[s, r] + y[j] * (
-        sum(a[,j,s] * pbranch[,j] *
-          sum((a[,j,r]/theta[r] - b[,j,r]/(1 - theta[r])) * pbranch[,j],
-            na.rm = TRUE) /
-          pcat[j]^2, na.rm = TRUE) -
-        sum(a[,j,s] *
-          (a[,j,r]/theta[r] - b[,j,r]/(1 - theta[r])) * pbranch[,j] / pcat[j],
-          na.rm = TRUE)
-        )
-  
-        dbs.t[s, r] <- dbs.t[s, r] + y[j] * (
-        sum(b[,j,s] * pbranch[,j] *
-          sum((a[,j,r]/theta[r] - b[,j,r]/(1 - theta[r])) * pbranch[,j],
-            na.rm = TRUE) /
-          pcat[j]^2, na.rm = TRUE) -
-        sum(b[,j,s] *
-          (a[,j,r]/theta[r] - b[,j,r]/(1 - theta[r])) * pbranch[,j] / pcat[j],
-          na.rm = TRUE)
-        )
-      }
-    }
-  }
-  
-  ## I(Theta)
-  info.t <- das.t/theta - dbs.t/(1 - theta) +
-            diag(as.t/theta^2 + bs.t/(1 - theta)^2)
-  dimnames(info.t) <- list(names(theta), names(theta))
-  solve(info.t)
-}
+# ## Covariance matrix for MPT model parameters
+# vcov.mpt <- function(object, ..., what = c("vcov", "fisher")){
+#   a       <- object$a
+#   b       <- object$b
+#   y       <- object$y
+#   pcat    <- object$pcat
+#   pbranch <- object$pbranch
+#   theta   <- coef(object)
+# 
+#   ## as(Theta), bs(Theta)
+#   as.t <- bs.t <- numeric(length(theta))
+#   for(s in seq_along(theta)){
+#     for(j in seq_along(pcat)){
+#       as.t[s] <- as.t[s] + y[j]*sum(a[,j,s]*pbranch[,j]/pcat[j], na.rm=TRUE)
+#       bs.t[s] <- bs.t[s] + y[j]*sum(b[,j,s]*pbranch[,j]/pcat[j], na.rm=TRUE)
+#     }
+#   }
+#   
+#   ## d as(Theta)/d t, d bs(Theta)/d t
+#   das.t <- dbs.t <- matrix(0, length(theta), length(theta))
+#   for(s in seq_along(theta)){
+#     for(r in seq_along(theta)){
+#       for(j in seq_along(pcat)){
+#         das.t[s, r] <- das.t[s, r] + y[j] * (
+#         sum(a[,j,s] * pbranch[,j] *
+#           sum((a[,j,r]/theta[r] - b[,j,r]/(1 - theta[r])) * pbranch[,j],
+#             na.rm = TRUE) /
+#           pcat[j]^2, na.rm = TRUE) -
+#         sum(a[,j,s] *
+#           (a[,j,r]/theta[r] - b[,j,r]/(1 - theta[r])) * pbranch[,j] / pcat[j],
+#           na.rm = TRUE)
+#         )
+#   
+#         dbs.t[s, r] <- dbs.t[s, r] + y[j] * (
+#         sum(b[,j,s] * pbranch[,j] *
+#           sum((a[,j,r]/theta[r] - b[,j,r]/(1 - theta[r])) * pbranch[,j],
+#             na.rm = TRUE) /
+#           pcat[j]^2, na.rm = TRUE) -
+#         sum(b[,j,s] *
+#           (a[,j,r]/theta[r] - b[,j,r]/(1 - theta[r])) * pbranch[,j] / pcat[j],
+#           na.rm = TRUE)
+#         )
+#       }
+#     }
+#   }
+#   
+#   ## I(Theta)
+#   info.t <- das.t/theta - dbs.t/(1 - theta) +
+#             diag(as.t/theta^2 + bs.t/(1 - theta)^2)
+#   dimnames(info.t) <- list(names(theta), names(theta))
+#   what <- match.arg(what)
+#   if (what == "vcov") solve(info.t) else info.t
+# }
 
 
 summary.mpt <- function(object, ...){
   x <- object
-  coef <- coef(x)
+  coef <- coef(x, logit=TRUE)
+  pcoef <- coef(x, logit=FALSE)
 
   ## Catch vcov error, so there are at least some NA's in the summary
-  s.err <- tryCatch(sqrt(diag(vcov(x))),
-    error = function(e) rep(NA, length(coef)))
+  s.err <- tryCatch(sqrt(diag(vcov(x, logit=TRUE))),
+                    error = function(e) rep(NA, length(coef)))
 
   tvalue <- coef / s.err
   pvalue <- 2 * pnorm(-abs(tvalue))
-  dn <- c("Estimate", "Std. Error")
-  coef.table <- cbind(coef, s.err, tvalue, pvalue)
-  dimnames(coef.table) <- list(names(coef), c(dn, "z value", "Pr(>|z|)"))
+  dn <- c("Estimate", "Logit Estim.", "Std. Error")
+  coef.table <- cbind(pcoef, coef, s.err, tvalue, pvalue)
+  dimnames(coef.table) <- list(names(pcoef), c(dn, "z value", "Pr(>|z|)"))
 
   aic <- AIC(x)
   ans <- list(ntrees=x$ntrees, coefficients=coef.table, aic=aic,
-    gof=x$goodness.of.fit, X2=sum(resid(x, "pearson")^2))
+              gof=x$goodness.of.fit, X2=sum(resid(x, "pearson")^2))
   class(ans) <- "summary.mpt"
   return(ans)
 }
 
 
-print.summary.mpt <- function(x, digits=max(3, getOption("digits")-3),
-  na.print="", signif.stars=getOption("show.signif.stars"), ...){
-  cat("\nNumber of trees:", x$ntrees, "\n")
+print.summary.mpt <- function(x, digits = max(3, getOption("digits") - 3),
+                              cs.ind = 2:3, ...){
   cat("\nCoefficients:\n")
-  printCoefmat(x$coef, digits = digits, signif.stars = signif.stars, ...)
-  cat("\nGoodness of fit:\n")
-  cat("Likelihood ratio G2:", format(x$gof[1], digits=digits), "on",
+  printCoefmat(x$coef, digits=digits, cs.ind=cs.ind, ...)
+  # cat("\nGoodness of fit:\n")
+  cat("\nLikelihood ratio G2:", format(x$gof[1], digits=digits), "on",
     x$gof[2], "df,", "p-value:", format(x$gof[3], digits=digits), "\n")
-  cat("Pearson X2:", format(x$X2, digits=digits), "\n")
-  cat("AIC:", format(x$aic, digits=max(4, digits + 1)))
+  cat("Pearson X2: ", format(x$X2, digits=digits), ",    ",
+      "AIC: ", format(x$aic, digits=max(4, digits + 1)), sep="")
   cat("\n")
+  cat("Number of trees:", x$ntrees, "\n")
   invisible(x)
 }
 
@@ -350,89 +523,31 @@ print.summary.mpt <- function(x, digits=max(3, getOption("digits")-3),
 simulate.mpt <- function(object, nsim, seed, pool = TRUE, ...){
 
   if(pool){
-    tid  <- names(object$fitted.values)
+    tid  <- object$treeid
     freq <- unlist( lapply(unique(tid),
-      function(i) rmultinom(1, object$n[i], object$pcat[tid == i])) )
+      function(i) rmultinom(1, object$n[tid == i], object$pcat[tid == i])) )
     names(freq) <- tid
   }else{
     stop("individual response simulation not yet implemented")
   }
-  freq
+  setNames(freq, names(object$fitted))
 }
 
 
-## Formulae for some prevalent MPT models
-mptmodel <- function(which, replicates = 1, response = "freq"){
+deviance.mpt <- function(object, ...) object$goodness.of.fit["G2"]
 
-  if(missing(which)){
-    modformula <- NULL
 
-  }else{
-    modformula <- switch(EXPR = which,
-      "1HT" = "list(
-        r + (1 - r)*b,
-        (1 - r)*(1 - b),
-        b,
-        1 - b
-      )",
-
-      "2HT" = "list(
-        r + (1 - r)*b,
-        (1 - r)*(1 - b),
-        (1 - d)*b,
-        (1 - d)*(1 - b) + d
-      )",
-
-      "PairAsso" = "list(
-        p*q*r,
-        p*q*(1 - r),
-        p*(1 - q)*r,
-        (1 - p) + p*(1 - q)*(1 - r)
-      )",
-
-      "SourceMon" = "list( 
-        D1*d1 + D1*(1 - d1)*g + (1 - D1)*b*g,
-        D1*(1 - d1)*(1 - g) + (1 - D1)*b*(1 - g),
-        (1 - D1)*(1 - b),
-        D2*(1 - d2)*g + (1 - D2)*b*g,
-        D2*d2 + D2*(1 - d2)*(1 - g) + (1 - D2)*b*(1 - g),
-        (1 - D2)*(1 - b),
-        b*g,
-        b*(1 - g),
-        1 - b
-      )",
-
-      "SR" = "list(
-        c*r,
-        (1 - c)*u^2,
-        2*(1 - c)*u*(1 - u),
-        c*(1 - r) + (1 - c)*(1 - u)^2,
-        u,
-        1 - u
-      )",
-
-      NULL  # Model not available
-    )
-  }
-
-  if(length(modformula) == 0){
-    cat("'which' has to be one of '1HT', '2HT', 'PairAsso', 'SourceMon',",
-        "'SR'.\n")
-    return(invisible(modformula))
-  }
-
-  modformula <- reformulate(modformula, response=response)
-
-  if(replicates > 1){
-    pat <- paste0("([", paste(all.vars(modformula[[3]]), collapse=""), "])")
-    newform <- NULL
-    for(i in seq_len(replicates))
-      newform <- c(newform, gsub(pat, paste0("\\1", i), modformula[[3]])[-1])
-    modformula <- reformulate(newform, response=response)
-    modformula <- as.formula(paste0(response, " ~ list(",
-                                    paste(newform, collapse=", "), ")"))
-  }
-
-  modformula
+predict.mpt <- function(object, newdata = NULL, type = c("freq", "prob"),
+                        ...){
+  type <- match.arg(type)
+  if(type == "prob") object$pcat
+  else
+    if(is.null(newdata)) fitted(object)
+    else {
+      stopifnot(length(newdata) == length(object$pcat))
+      tid <- object$treeid
+      object$pcat * setNames(tapply(newdata, tid, sum)[as.character(tid)],
+                             names(object$pcat))
+    }
 }
 

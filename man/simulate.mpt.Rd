@@ -11,10 +11,9 @@
 \arguments{
   \item{object}{an object of class \code{mpt}, typically the result of a
     call to \code{\link{mpt}}.}
-  \item{nsim}{currently not used.}
-  \item{seed}{currently not used.}
-  \item{pool}{logical, if TRUE (default), pooled responses (summed across
-    respondents) are returned.}
+  \item{nsim, seed}{currently not used.}
+  \item{pool}{logical, if \code{TRUE} (default), pooled responses (summed
+    across respondents) are returned.}
   \item{\dots}{further arguments passed to or from other methods.
     None are used in this method.}
 }
@@ -28,12 +27,12 @@
   responses were simulated.
 }
 \seealso{
-  \code{\link{mpt}}.
+  \code{\link{mpt}}, \code{\link{rmultinom}}.
 }
 \examples{
 data(retroact)
  
-mpt1 <- mpt(freq ~ list(
+mpt1 <- mpt(mptspec(
   c*r,
   (1 - c)*u^2,
   2*(1 - c)*u*(1 - u),
@@ -45,11 +44,11 @@ mpt1 <- mpt(freq ~ list(
 simulate(mpt1)
 
 ## Perform parametric bootstrap
-LR.stat <- replicate(200, mpt(formula(mpt1), simulate(mpt1))$good[1])
+LR.stat <- replicate(200, deviance(mpt(mpt1$spec, simulate(mpt1))))
 
-hist(LR.stat, col="lightgrey", border="white", freq=FALSE, breaks=20,
-  main="Parametric bootstrap")
-curve(dchisq(x, df=mpt1$good[1]), add=TRUE)
-abline(v=mpt1$good[1], lty=2)
+hist(LR.stat, col="lightgray", border="white", freq=FALSE, breaks=20,
+     main="Parametric bootstrap")
+curve(dchisq(x, df=deviance(mpt1)), add=TRUE)
+abline(v=deviance(mpt1), lty=2)
 }
 \keyword{models}
