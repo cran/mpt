@@ -28,15 +28,15 @@ mptEM(theta, data, a, b, c, maxit = 1000, tolerance = 1e-8,
   A prerequisite for the application of the EM algorithm is that the
   probabilities of the i-th branch leading to the j-th category take the form
   \deqn{p_{ij}(\Theta) =
-    c_{ij} \prod_{s = 1}^S \theta_s^{a_{ijs}} (1 - \theta_s)^{b_{ijs}},}
-  where \eqn{\Theta} is the parameter vector, and \eqn{a_{ijs}} and
-  \eqn{b_{ijs}} count the occurrences of \eqn{\vartheta_s} or
-  \eqn{1 - \vartheta_s} in a branch, and \eqn{c_{kj}} is a nonnegative real
-  number.  The branch probabilities sum up to the total probability of a given
-  category, \eqn{p_j = p_{1j} + \dots + p_{Ij}}.  This is the structural
-  restriction of the class of MPT models that can be represented by binary
-  trees.  Other model types have to be suitably reparameterized for the
-  algorithm to apply.
+    c_{ij} \prod_{s = 1}^S \vartheta_s^{a_{ijs}} (1 - \vartheta_s)^{b_{ijs}},}
+  where \eqn{\Theta = (\vartheta_s)} is the parameter vector, \eqn{a_{ijs}}
+  and \eqn{b_{ijs}} count the occurrences of \eqn{\vartheta_s} and
+  \eqn{1 - \vartheta_s} in a branch, respectively, and \eqn{c_{kj}} is a
+  nonnegative real number.  The branch probabilities sum up to the total
+  probability of a given category, \eqn{p_j = p_{1j} + \dots + p_{Ij}}.  This
+  is the structural restriction of the class of MPT models that can be
+  represented by binary trees.  Other model types have to be suitably
+  reparameterized for the algorithm to apply.
 
   See Hu and Batchelder (1994) and Hu (1999) for details on the algorithm.
 }

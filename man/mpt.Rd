@@ -35,7 +35,8 @@ mpt(spec, data, start = NULL, method = c("BFGS", "EM"), treeid = "treeid",
   \item{data}{a data frame consisting at least of one variable that contains
     the absolute response frequencies. Alternatively, a (named) vector or
     matrix of frequencies.}
-  \item{start}{a vector of starting values for the parameter estimates.}
+  \item{start}{a vector of starting values for the parameter estimates between
+    zero and one.}
   \item{method}{optimization method. Implemented are
     \code{optim(..., method = "BFGS")} and the EM algorithm.}
   \item{treeid}{name of the variable that identifies the processing trees
@@ -140,6 +141,6 @@ axis(1, 1:3, names(coef(mpt1))); axis(2)
 arrows(1:3, plogis(confint(mpt1))[,1], 1:3, plogis(confint(mpt1))[,2],
        .05, 90, 3)
 
-## See ?retroact and ?proact for further examples.
+## See ?retroact, ?proact, and ?prospecMemory for further examples.
 }
 \keyword{models}

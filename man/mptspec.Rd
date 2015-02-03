@@ -46,6 +46,9 @@ mptspec(\dots, .restr = NULL)
   \code{PairAsso}: the paired-associate learning model (Riefer & Batchelder,
     1988).
 
+  \code{prospec}: the event-based prospective memory model (Smith & Bayen,
+    2004).
+
   \code{rmodel}: the r-model of recognition heuristic use (Hilbig, Erdfelder,
     & Pohl, 2010).
 
@@ -113,6 +116,11 @@ mptspec(\dots, .restr = NULL)
   Riefer, D.M., & Batchelder, W.H. (1988).
   Multinomial modeling and the measurement of cognitive processes.
   \emph{Psychological Review}, \bold{95}, 318--339.
+
+  Smith, R.E., & Bayen, U.J. (2004).
+  A multinomial model of event-based prospective memory.
+  \emph{Journal of Experimental Psychology: Learning, Memory, and Cognition},
+  \bold{30}, 756--777. doi:10.1037/0278-7393.30.4.756
 
   Snodgrass, J.G., & Corwin, J. (1988).
   Pragmatics of measuring recognition memory: Applications to dementia and

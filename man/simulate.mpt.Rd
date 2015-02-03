@@ -48,7 +48,7 @@ LR.stat <- replicate(200, deviance(mpt(mpt1$spec, simulate(mpt1))))
 
 hist(LR.stat, col="lightgray", border="white", freq=FALSE, breaks=20,
      main="Parametric bootstrap")
-curve(dchisq(x, df=deviance(mpt1)), add=TRUE)
+curve(dchisq(x, df=1), add=TRUE)
 abline(v=deviance(mpt1), lty=2)
 }
 \keyword{models}

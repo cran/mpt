@@ -1,3 +1,12 @@
+Changes in 0.5-1
+
+  * mpt: the start argument expects starting values between zero and one
+    regardless of the fitting method
+  * mptspec("prospec"): return specification of event-based prospective memory
+    model (Smith & Bayen, 2004)
+  * prospecMemory, recogROC (new data sets): prospective memory data (Smith &
+    Bayen, 2004), recognition memory data (Broeder & Schuetz, 2009)
+
 Changes in 0.5-0
 
   * User-visible changes: MPT models are now specified via the new mptspec()
@@ -15,7 +24,6 @@ Changes in 0.5-0
     probabilities for a given MPT model and optionally new data
   * valence (new data set): word valence and source memory for vertical
     position
-  * DESCRIPTION (Date, Version): 0.5-0
 
 Changes in 0.4-1
 
@@ -24,7 +32,6 @@ Changes in 0.4-1
   * recogROC (new data set): recognition memory data (Broeder & Schuetz, 2009)
   * nobs.mpt (new function): extracts number of free response categories
   * Add citation file: useR! 2011 talk
-  * DESCRIPTION (Date, Version): 0.4-1
 
 Changes in 0.4-0
 
@@ -32,7 +39,6 @@ Changes in 0.4-0
   * mptmodel (new function): return formulae for some prevalent MPT models
   * mpt.R: mpt() function now takes dataframe or vector input
   * NAMESPACE: new file
-  * DESCRIPTION (Date, Version): 0.4-0
 
 Changes in 0.3-0
 
@@ -41,7 +47,6 @@ Changes in 0.3-0
   * summary.mpt (new function): summary method for mpt objects
   * mpt.Rd (examples): update
   * proact.Rd (examples): update
-  * DESCRIPTION (Date, Version): 0.3-0
 
 Changes in 0.2-0
 
@@ -53,7 +58,6 @@ Changes in 0.2-0
   * mptEM: new stepsize argument
   * mpt.Rd (value): update
   * mptEM.Rd (usage, value): update
-  * DESCRIPTION (Date, Version): 0.2-0
 
 Changes in 0.1-0
 

@@ -1,9 +1,9 @@
+# Sep/10/2014 new infrastructure, mptspec(), mpt(..., method = "BFGS")
+#
+# Dec/15/2013 simplify exctraction of EM constants (a, b, c)
+#
 # Jan/24/2013 BUG FIX: typo in vcov.mpt, hence wrong standard errors
 #             (reported by Rainer Alexandrowicz and Bartosz Gula)
-#
-# Dec/15/2013: simplify exctraction of EM constants (a, b, c)
-#
-# Sep/10/2014: new infrastructure, mptspec(), mpt(..., method = "BFGS")
 
 
 ## Fit MPT model via maximum likelihood (BFGS or EM)
@@ -54,13 +54,14 @@ mpt <- function(spec, data, start = NULL, method = c("BFGS", "EM"),
   y <- colSums(data)
   
   method <- match.arg(method)
-  ## determine number of parameters and starting values (on prob scale)
+  ## determine number of parameters and starting values
   if(is.null(start)) {
     start <- spec$par[is.na(spec$par)]  # FIX ME: is.na still necessary?
     start[] <- if (method == "EM") 0.5 else 0  # completely ad hoc
   } else {
-    ## do sanity checking of starting values/names/etc., log-transform
+    ## do sanity checking of starting values/names/etc.
     if(is.null(names(start))) names(start) <- names(spec$par[is.na(spec$par)])
+    if (method == "BFGS") start <- qlogis(start)  # logit transform
   }
 
   if (method == "BFGS") {
