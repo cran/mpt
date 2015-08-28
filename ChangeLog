@@ -1,3 +1,12 @@
+Changes in 0.5-2
+
+  * BUG FIX: mpt(..., method = "EM") could fail when a symbol in the model was
+    also used as an object name in the work space
+  * mpt: newline and other space characters in model specifications are now
+    also allowed for the EM fitting method (not only for BFGS)
+  * logLik.mpt: add multinomial constant
+  * NAMESPACE: import graphics, utils
+
 Changes in 0.5-1
 
   * mpt: the start argument expects starting values between zero and one

@@ -1,8 +1,14 @@
+# Aug/27/2015 BUG FIX: mpt(..., method = "EM") could fail when a symbol in the
+#             model was also used as an object name in the work space; fixed
+#             by using evalq() instead of eval()
+#
+# Mar/11/2015 add multinomial constant to logLik
+#
 # Sep/10/2014 new infrastructure, mptspec(), mpt(..., method = "BFGS")
 #
 # Dec/15/2013 simplify exctraction of EM constants (a, b, c)
 #
-# Jan/24/2013 BUG FIX: typo in vcov.mpt, hence wrong standard errors
+# Jan/24/2013 BUG FIX: typo in vcov.mpt(), hence wrong standard errors
 #             (reported by Rainer Alexandrowicz and Bartosz Gula)
 
 
@@ -94,13 +100,13 @@ mpt <- function(spec, data, start = NULL, method = c("BFGS", "EM"),
 
   } else {  # EM
 
-    ## From mpt package: get constants for EM algorithm
+    ## Get constants for EM algorithm
     terms <- sapply(lapply(spec$prob, as.character), strsplit, "\\+")  # "+"
-    terms <- lapply(terms, function(x) gsub(" ", "", x))  # remove white space
+    terms <- lapply(terms, function(x) gsub("[[:space:]]", "", x))
 
-    aa <- bb <- array(NA, c(max(sapply(terms, length)),   # max paths to categ
-                            length(terms),                # n categories
-                            length(start)))               # n pars
+    aa <- bb <- array(NA, c(max(sapply(terms, length)),  # max paths to categ
+                            length(terms),               # n categories
+                            length(start)))              # n pars
     cc <- matrix(1, dim(aa)[1], dim(aa)[2])
 
     for(j in 1:dim(aa)[2]){
@@ -110,7 +116,7 @@ mpt <- function(spec, data, start = NULL, method = c("BFGS", "EM"),
         # cval <- prod(as.numeric(grep("^[.0-9]+$", pterms, value=TRUE)))
         # cval <- prod(sapply(parse(text=pterms),
         cc[i, j] <- prod(sapply(parse(text=pterms),
-            function(x) tryCatch(as.numeric(eval(x)), error=function(e) NA)),
+            function(x) tryCatch(as.numeric(evalq(x)), error=function(e) NA)),
             na.rm=TRUE)
 
         # if(cval >= 0) cc[i, j] <- cval  # >= ?, necessary?
@@ -148,22 +154,24 @@ mpt <- function(spec, data, start = NULL, method = c("BFGS", "EM"),
           else if(!is.null(colnames(data))) colnames(data)
           else paste(tid, unlist(lapply(rle(as.character(tid))$lengths,
                                         seq_len)), sep=".")
-  ncat   <- table(tid)
-  nobs   <- sum(ncat - 1)
-  ntrees <- length(ncat)
-  n      <- setNames(tapply(y, tid, sum)[as.character(tid)], snam)
-  fitted <- n*pcat
-  G2     <- 2*sum(y*log(y/fitted), na.rm=TRUE)
-  df     <- nobs - length(coef)
-  gof    <- c(G2=G2, df=df, pval = 1 - pchisq(G2, df))
+  ncat    <- table(tid)
+  nobs    <- sum(ncat - 1)
+  ntrees  <- length(ncat)
+# n       <- setNames(tapply(y, tid, sum)[as.character(tid)], snam)
+  nbytree <- tapply(y, tid, sum)
+  n       <- setNames(nbytree[as.character(tid)], snam)
+  fitted  <- n*pcat
+  G2      <- 2*sum(y*log(y/fitted), na.rm=TRUE)
+  df      <- nobs - length(coef)
+  gof     <- c(G2=G2, df=df, pval = 1 - pchisq(G2, df))
 
   rval <- list(
     coefficients = coef,
-    loglik = loglik,
+    loglik = sum(lfactorial(nbytree)) - sum(lfactorial(y)) + loglik,
     nobs = nobs,         # nrow(data),
     # df = length(start),
     fitted = fitted,
-    goodness.of.fit=gof,
+    goodness.of.fit = gof,
     ntrees = ntrees,
     n = n,
     y = setNames(y, snam),

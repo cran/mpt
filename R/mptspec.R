@@ -240,6 +240,6 @@ update.mptspec <- function(object, .restr = NULL, ...){
 
 ## Print model equations
 print.mptspec <- function(x, ...){
-  print(lapply(x$prob, function(s) as.list(s)[[1]]), ...)
+  print(unlist(x$prob), ...)
 }
 

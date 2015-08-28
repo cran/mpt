@@ -1,8 +1,8 @@
-399c6469377cd449133b1ad91fb1068a *ChangeLog
-1cfd9b0ac85d353e713c9dcdbd12df42 *DESCRIPTION
-ff6b255fe114eff2e9ff190b2e9a54e7 *NAMESPACE
-6d5466eaa9c3d7759d4a6860f5f1c422 *R/mpt.R
-71374e26a6f2dbb2e3a96619fb247ab2 *R/mptspec.R
+78b3aba49448f505bb482ff2b0f5e9da *ChangeLog
+adbbad6a92b6fa7b3a7aadc7992d7c12 *DESCRIPTION
+26a124542926f33c37deb3c7f83683c5 *NAMESPACE
+65fb1d5aff96a86b06d025d98c1ffabf *R/mpt.R
+1b302a8d58f21bd66a66acb89a6879a3 *R/mptspec.R
 c8d271e009c3e2fde436fa25f0c4e0b7 *data/proact.rda
 7a5625aa207741755c77e4a075b22797 *data/prospecMemory.rda
 7f18dc2cfee96a9518f7d4a4f2c9e602 *data/recogROC.rda
