@@ -1,12 +1,18 @@
+# Apr/12/2016 anova.mpt() now works with stats::print.anova()
+#
+# Mar/18/2016 better fix using eval(..., as.list(spec$par)); this renders more
+#             expressions fittable via EM including base functions
+#
 # Aug/27/2015 BUG FIX: mpt(..., method = "EM") could fail when a symbol in the
 #             model was also used as an object name in the work space; fixed
-#             by using evalq() instead of eval()
+#             by using evalq() instead of eval(); problem with evalq() is that
+#             it hides base functions like sqrt()
 #
 # Mar/11/2015 add multinomial constant to logLik
 #
 # Sep/10/2014 new infrastructure, mptspec(), mpt(..., method = "BFGS")
 #
-# Dec/15/2013 simplify exctraction of EM constants (a, b, c)
+# Dec/15/2013 simplify extraction of EM constants (a, b, c)
 #
 # Jan/24/2013 BUG FIX: typo in vcov.mpt(), hence wrong standard errors
 #             (reported by Rainer Alexandrowicz and Bartosz Gula)
@@ -112,14 +118,9 @@ mpt <- function(spec, data, start = NULL, method = c("BFGS", "EM"),
     for(j in 1:dim(aa)[2]){
       for(i in 1:sapply(terms, length)[j]){
         pterms <- strsplit(terms[[j]][i], "\\*")[[1]]
-        # cval <- sum(as.numeric(grep("^[0-9]+$", pterms, value=TRUE)))
-        # cval <- prod(as.numeric(grep("^[.0-9]+$", pterms, value=TRUE)))
-        # cval <- prod(sapply(parse(text=pterms),
-        cc[i, j] <- prod(sapply(parse(text=pterms),
-            function(x) tryCatch(as.numeric(evalq(x)), error=function(e) NA)),
-            na.rm=TRUE)
+        cc[i, j] <- prod(sapply(parse(text=pterms), eval, as.list(spec$par)),
+                         na.rm=TRUE)
 
-        # if(cval >= 0) cc[i, j] <- cval  # >= ?, necessary?
         for(s in seq_along(start)){
           tname <- names(start)[s]
 
@@ -163,7 +164,7 @@ mpt <- function(spec, data, start = NULL, method = c("BFGS", "EM"),
   fitted  <- n*pcat
   G2      <- 2*sum(y*log(y/fitted), na.rm=TRUE)
   df      <- nobs - length(coef)
-  gof     <- c(G2=G2, df=df, pval = 1 - pchisq(G2, df))
+  gof     <- c(G2=G2, df=df, pval = pchisq(G2, df, lower.tail=FALSE))
 
   rval <- list(
     coefficients = coef,
@@ -191,7 +192,7 @@ mpt <- function(spec, data, start = NULL, method = c("BFGS", "EM"),
 mptEM <- function(theta, data, a, b, c, maxit = 1000, tolerance = 1e-8,
                   stepsize = 1, verbose = FALSE){
   nbranch <- dim(a)[1]
-  pbranch <- matrix(NA, nbranch, length(data))
+  pbranch <- matrix(NA_real_, nbranch, length(data))
   loglik0 <- -Inf
   theta1  <- theta
 
@@ -337,44 +338,42 @@ print.mpt <- function(x, digits = max(3, getOption("digits") - 3),
 }
 
 
-anova.mpt <- function (object, ..., test=c("Chisq", "none")){
-  ## Adapted form MASS::anova.polr by Brian Ripley
+anova.mpt <- function (object, ..., test = c("Chisq", "none")){
+  ## Adapted form MASS::anova.polr and stats::anova.glmlist
 
   test <- match.arg(test)
   dots <- list(...)
   if (length(dots) == 0)
       stop('anova is not implemented for a single "mpt" object')
   mlist <- list(object, ...)
+  nmodels <- length(mlist)
   names(mlist) <- c(deparse(substitute(object)),
-                    as.character(substitute(...[]))[2:length(mlist)])
-  nt <- length(mlist)
-  dflis <- sapply(mlist, function(x) x$goodness["df"])
-  s <- order(dflis, decreasing = TRUE)
-  mlist <- mlist[s]
+                    as.character(substitute(...[]))[2:nmodels])
 
   if (any(!sapply(mlist, inherits, "mpt")))
       stop('not all objects are of class "mpt"')
 
   ns <- sapply(mlist, function(x) length(x$fitted))
-  if(any(ns != ns[1]))
+  if (any(ns != ns[1]))
       stop("models were not all fitted to the same size of dataset")
 
-  dfs <- dflis[s]
-  lls <- sapply(mlist, function(x) x$goodness["G2"])
-  tss <- c("", paste(1:(nt - 1), 2:nt, sep = " vs "))
+  dfs <- sapply(mlist, function(x) x$goodness.of.fit["df"])
+  lls <- sapply(mlist, function(x) x$goodness.of.fit["G2"])
   df <- c(NA, -diff(dfs))
   x2 <- c(NA, -diff(lls))
-  pr <- c(NA, 1 - pchisq(x2[-1], df[-1]))
-  out <- data.frame(Model = names(mlist), Resid.df = dfs, Deviance = lls,
-                    Test = tss, Df = df, LRtest = x2, Prob = pr)
-  names(out) <- c("Model", "Resid. df", "Resid. Dev", "Test",
-                  "   Df", "LR stat.", "Pr(>Chi)")
-  rownames(out) <- 1:nt
-  if (test == "none") out <- out[, 1:6]
-  class(out) <- c("Anova", "data.frame")
-  attr(out, "heading") <-
-    "Analysis of deviance table for multinomial processing tree models\n"
-  out
+  pr <- c(NA, pchisq(x2[-1], df[-1], lower.tail = FALSE))
+
+  out <- data.frame(Resid.df = dfs, Deviance = lls, Df = df, Chisq = x2,
+                    Prob = pr)
+  dimnames(out) <- list(1:nmodels, c("Resid. Df", "Resid. Dev", "Df",
+                                     "Deviance", "Pr(>Chi)"))
+  if (test == "none") out <- out[, -ncol(out)]
+
+  structure(out,
+            heading = c("Analysis of Deviance Table\n",
+                        paste0("Model ", format(1L:nmodels), ": ",
+                               names(mlist), collapse = "\n")),
+            class = c("anova", "data.frame"))
 }
 
 

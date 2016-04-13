@@ -1,3 +1,8 @@
+Changes in 0.5-3
+
+  * anova.mpt: now works with stats::print.anova()
+  * mpt: small improvements for mpt(..., method = "EM")
+
 Changes in 0.5-2
 
   * BUG FIX: mpt(..., method = "EM") could fail when a symbol in the model was

@@ -1,6 +1,6 @@
 Package: mpt
-Version: 0.5-2
-Date: 2015-08-27
+Version: 0.5-3
+Date: 2016-04-12
 Title: Multinomial Processing Tree Models
 Authors@R: c(person(given = "Florian", family = "Wickelmaier",
                     role = c("aut", "cre"), email = "wickelmaier@web.de"),
@@ -15,10 +15,10 @@ Description: Fitting and testing multinomial processing tree (MPT) models, a
   Batchelder, 1988).
 License: GPL (>= 2)
 URL: http://homepages.uni-tuebingen.de/florian.wickelmaier
-Packaged: 2015-08-27 12:18:19 UTC; siifw01
+NeedsCompilation: no
+Packaged: 2016-04-12 16:58:09 UTC; siifw01
 Author: Florian Wickelmaier [aut, cre],
   Achim Zeileis [aut]
 Maintainer: Florian Wickelmaier <wickelmaier@web.de>
-NeedsCompilation: no
 Repository: CRAN
-Date/Publication: 2015-08-28 01:06:57
+Date/Publication: 2016-04-13 09:28:16
