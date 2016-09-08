@@ -5,8 +5,8 @@
   Sixty-four participants studied words with positive, negative, or neutral
   valence displayed at the top or bottom part of a computer screen.  Later,
   these words were presented intermixed with new words, and participants had
-  to classify them as "top," "bottom," or "new."  It was of interest, if
-  memory is improved in congruent trials, in which word valence and vertical
+  to classify them as "top," "bottom," or "new."  It was of interest if memory
+  is improved in congruent trials, in which word valence and vertical
   position match (positive-top, negative-bottom), as opposed to incongruent
   trials.
 }

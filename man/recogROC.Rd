@@ -5,14 +5,14 @@
   Broeder and Schuetz (2009) tested the shape of recognition receiver
   operating characteristics.  75 participants studied 60 words.  In a
   recognition test, 60 words -- old and new items mixed -- were presented, and
-  participants had to classify them as old or new.  The percentage of new
+  participants had to classify them as old or new.  The percentage of old
   items varied in order to manipulate the response bias.
 }
 \usage{data(recogROC)}
 \format{
   A data frame consisting of five variables:
   \describe{
-    \item{\code{p.new}}{percentage of new items.}
+    \item{\code{p.target}}{percentage of target (old) items.}
     \item{\code{item}}{factor. Target (old) or distractor (new) item.}
     \item{\code{resp}}{a factor giving the response category, \code{old}
       or \code{new}.}
@@ -27,9 +27,10 @@
   against the two-high-threshold model of recognition.
   \emph{Journal of Experimental Psychology: Learning, Memory, and Cognition},
   \bold{35}, 587--606.
+  \doi{10.1037/a0015279}
 }
 \examples{
-## Data from Broeder \& Schuetz (2009, Table 1, Exp. 1)
+## Data from Broeder & Schuetz (2009, Table 1, Exp. 1)
 data(recogROC)
 
 ## Fit the two-high-threshold model with restrictions

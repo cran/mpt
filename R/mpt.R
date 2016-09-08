@@ -338,7 +338,7 @@ print.mpt <- function(x, digits = max(3, getOption("digits") - 3),
 }
 
 
-anova.mpt <- function (object, ..., test = c("Chisq", "none")){
+anova.mpt <- function(object, ..., test = c("Chisq", "none")){
   ## Adapted form MASS::anova.polr and stats::anova.glmlist
 
   test <- match.arg(test)
@@ -347,8 +347,8 @@ anova.mpt <- function (object, ..., test = c("Chisq", "none")){
       stop('anova is not implemented for a single "mpt" object')
   mlist <- list(object, ...)
   nmodels <- length(mlist)
-  names(mlist) <- c(deparse(substitute(object)),
-                    as.character(substitute(...[]))[2:nmodels])
+  names(mlist) <- sapply(match.call()[-1],
+      function(s) paste(deparse(s), collapse="\n"))[seq_len(nmodels)]
 
   if (any(!sapply(mlist, inherits, "mpt")))
       stop('not all objects are of class "mpt"')

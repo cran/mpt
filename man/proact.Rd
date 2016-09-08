@@ -41,6 +41,7 @@
   Riefer, D.M., & Batchelder, W.H. (1988).
   Multinomial modeling and the measurement of cognitive processes.
   \emph{Psychological Review}, \bold{95}, 318--339.
+  \doi{10.1037/0033-295x.95.3.318}
 }
 \examples{
 data(proact)

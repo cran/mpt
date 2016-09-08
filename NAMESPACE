@@ -1,6 +1,6 @@
 import("stats")
-import("graphics")
 
+importFrom("graphics", "abline", "panel.smooth", "plot", "text")
 importFrom("utils", "getParseData")
 
 export(

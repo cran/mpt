@@ -82,7 +82,7 @@ mpt(spec, data, start = NULL, method = c("BFGS", "EM"), treeid = "treeid",
 
   \item{coefficients}{a vector of parameter estimates.}
   \item{loglik}{the log-likelihood of the fitted model.}
-  \item{nobs}{the number of free response categories.}
+  \item{nobs}{the number of nonredundant response categories.}
   \item{fitted}{the fitted response frequencies.}
   \item{goodness.of.fit}{the goodness of fit statistic including the
     likelihood ratio fitted vs. saturated model (G2), the degrees of
@@ -101,15 +101,18 @@ mpt(spec, data, start = NULL, method = c("BFGS", "EM"), treeid = "treeid",
   Batchelder, W.H., & Riefer, D.M. (1999).
   Theoretical and empirical review of multinomial process tree modeling.
   \emph{Psychonomic Bulletin & Review}, \bold{6}, 57--86.
+  \doi{10.3758/bf03210812}
 
   Erdfelder, E., Auer, T., Hilbig, B.E., Assfalg, A., Moshagen, M., &
   Nadarevic, L. (2009).
   Multinomial processing tree models: A review of the literature.
   \emph{Zeitschrift fuer Psychologie}, \bold{217}, 108--124.
+  \doi{10.1027/0044-3409.217.3.108}
 
   Riefer, D.M., & Batchelder, W.H. (1988).
   Multinomial modeling and the measurement of cognitive processes.
   \emph{Psychological Review}, \bold{95}, 318--339.
+  \doi{10.1037/0033-295x.95.3.318}
 }
 \seealso{
   \code{\link{mptEM}}, \code{\link{mptspec}}, \code{\link{simulate.mpt}},

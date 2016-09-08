@@ -1,3 +1,11 @@
+Changes in 0.5-4
+
+  * citysize (new data set): city-size paired-comparison task
+  * recogROC.R, recogROC.Rd: first column contains percentage of target (old),
+    not new, items (reported by Katharina Naumann)
+  * *.Rd: add DOIs to all references
+  * NAMESPACE: properly import from graphics
+
 Changes in 0.5-3
 
   * anova.mpt: now works with stats::print.anova()
@@ -44,7 +52,8 @@ Changes in 0.4-1
   * BUG FIX: typo in vcov.mpt(), hence wrong standard errors (reported by
     Rainer Alexandrowicz and Bartosz Gula)
   * recogROC (new data set): recognition memory data (Broeder & Schuetz, 2009)
-  * nobs.mpt (new function): extracts number of free response categories
+  * nobs.mpt (new function): extracts number of nonredundant response
+    categories
   * Add citation file: useR! 2011 talk
 
 Changes in 0.4-0

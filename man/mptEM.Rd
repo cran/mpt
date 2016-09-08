@@ -52,11 +52,13 @@ mptEM(theta, data, a, b, c, maxit = 1000, tolerance = 1e-8,
   Multinomial processing tree models: An implementation.
   \emph{Behavior Research Methods, Instruments, & Computers}, \bold{31},
   689--695.
+  \doi{10.3758/BF03200747}
 
   Hu, X., & Batchelder, W.H. (1994).
   The statistical analysis of general processing tree models with the EM
   algorithm.
   \emph{Psychometrika}, \bold{59}, 21--47.
+  \doi{10.1007/bf02294263}
 }
 \seealso{
   \code{\link{mpt}}.

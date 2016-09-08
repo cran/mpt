@@ -92,44 +92,53 @@ mptspec(\dots, .restr = NULL)
   human memory.
   \emph{British Journal of Mathematical and Statistical Psychology},
   \bold{39}, 129--149.
+  \doi{10.1111/j.2044-8317.1986.tb00852.x}
 
   Batchelder, W.H., & Riefer, D.M. (1990).
   Multinomial processing models of source monitoring.
   \emph{Psychological Review}, \bold{97}, 548--564.
+  \doi{10.1037/0033-295x.97.4.548}
 
   Blackwell, H.R. (1963).
   Neural theories of simple visual discriminations.
   \emph{Journal of the Optical Society of America}, \bold{53}, 129--160.
+  \doi{10.1364/JOSA.53.000129}
 
   Broeder, A., & Schuetz, J. (2009).
   Recognition ROCs are curvilinear--or are they? On premature arguments
   against the two-high-threshold model of recognition.
   \emph{Journal of Experimental Psychology: Learning, Memory, and Cognition},
   \bold{35}, 587--606.
+  \doi{10.1037/a0015279}
 
   Hilbig, B.E., Erdfelder, E., & Pohl, R.F. (2010).
   One-reason decision-making unveiled: A measurement model of the recognition
   heuristic.
   \emph{Journal of Experimental Psychology: Learning, Memory, and Cognition},
   \bold{36}, 123--134.
+  \doi{10.1037/a0017518}
 
   Riefer, D.M., & Batchelder, W.H. (1988).
   Multinomial modeling and the measurement of cognitive processes.
   \emph{Psychological Review}, \bold{95}, 318--339.
+  \doi{10.1037/0033-295x.95.3.318}
 
   Smith, R.E., & Bayen, U.J. (2004).
   A multinomial model of event-based prospective memory.
   \emph{Journal of Experimental Psychology: Learning, Memory, and Cognition},
-  \bold{30}, 756--777. doi:10.1037/0278-7393.30.4.756
+  \bold{30}, 756--777.
+  \doi{10.1037/0278-7393.30.4.756}
 
   Snodgrass, J.G., & Corwin, J. (1988).
   Pragmatics of measuring recognition memory: Applications to dementia and
   amnesia.
   \emph{Journal of Experimental Psychology: General}, \bold{117}, 34--50.
+  \doi{10.1037/0096-3445.117.1.34}
 
   Swets, J. A. (1961).
   Is there a sensory threshold?
   \emph{Science}, \bold{134}, 168--177.
+  \doi{10.1126/science.134.3473.168}
 }
 \seealso{
   \code{\link{mpt}}.
