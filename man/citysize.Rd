@@ -1,6 +1,6 @@
 \name{citysize}
 \alias{citysize}
-\title{City-Size Paired-Comparison Task and Instruction Type}
+\title{City-Size Paired-Comparison Task and Response Strategy}
 \description{
   Thirty-seven participants performed a city-size paired-comparison task. On
   each trial, participants indicated which of two cities was more populous.
@@ -19,7 +19,7 @@
   \describe{
     \item{\code{gender}}{factor. Participant gender.}
     \item{\code{age}}{Participant age.}
-    \item{\code{country}}{Number cities whose country was correctly
+    \item{\code{country}}{Number of cities whose country was correctly
       identified.}
     \item{\code{rt}}{Median response time (in seconds) across paired
       comparisons.}

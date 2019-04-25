@@ -1,3 +1,14 @@
+Changes in 0.6-0
+
+  * mptspec("WST"): return specification of inference-guessing model (Klauer,
+    Stahl, & Erdfelder, 2007) for the Wason selection task (prompted by
+    Charlotte Tanis)
+  * selectiontask (new data set): Wason selection task data (Klauer et al.,
+    2007)
+  * prospecMemory: add replication data for Smith and Bayen (2004,
+    Experiment 1)
+  * DESCRIPTION: new URL
+
 Changes in 0.5-4
 
   * citysize (new data set): city-size paired-comparison task

@@ -2,7 +2,7 @@
 \alias{proact}
 \title{Recall Frequencies for DaPolito's Experiment on Proactive Inhibition}
 \description{
-  In DaPolito's experiment (Greeno, James, DaPolito & Polson, 1978), 60
+  In DaPolito's experiment (Greeno, James, DaPolito, & Polson, 1978), 60
   subjects were presented with lists of stimulus-response associates to be
   learned, followed by a test in which only the stimuli were presented and
   the responses had to be recalled.  Stimuli consisted of three-letter
@@ -43,11 +43,14 @@
   \emph{Psychological Review}, \bold{95}, 318--339.
   \doi{10.1037/0033-295x.95.3.318}
 }
+\seealso{
+  \code{\link{mpt}}.
+}
 \examples{
 data(proact)
 
-## Testing hypotheses about the parameters
-mpt1 <- mpt(mptspec(
+## Testing effects of repeated A-B presentations
+spec <- mptspec(
   p1*q1*r1,
   p1*q1*(1 - r1),
   p1*(1 - q1)*r1,
@@ -77,14 +80,12 @@ mpt1 <- mpt(mptspec(
   p6*q6*(1 - r6),
   p6*(1 - q6)*r6,
   (1 - p6) + p6*(1 - q6)*(1 - r6)
-), proact)
+)
+m1 <- mpt(spec, proact)
+m2 <- mpt(update(spec, .restr=list(q2=q1, q3=q1, q5=q4, q6=q4)), proact)
+m3 <- mpt(update(spec, .restr=list(r2=r1, r3=r1, r5=r4, r6=r4)), proact)
 
-mpt2 <- mpt(update(mpt1$spec, .restr=list(q2=q1, q3=q1, q4=q2, q5=q2, q6=q2)),
-            proact)
-mpt3 <- mpt(update(mpt1$spec, .restr=list(r2=r1, r3=r1, r4=r2, r5=r2, r6=r2)),
-            proact)
-
-anova(mpt2, mpt1)  # q increases with number of A-B presentations
-anova(mpt3, mpt1)  # r remains constant
+anova(m2, m1)  # q increases with number of A-B presentations
+anova(m3, m1)  # r remains constant
 }
 \keyword{datasets}

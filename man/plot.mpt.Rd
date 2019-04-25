@@ -52,16 +52,15 @@ spec <- mptspec(
   p3*(1 - q3)*r3,
   (1 - p3) + p3*(1 - q3)*(1 - r3)
 )
-mpt1 <- mpt(update(spec, .restr = list(p2 = p1, p3 = p1)),
-            proact[proact$test == 1, ])
-mpt2 <- mpt(update(spec, .restr = list(q2 = q1, q3 = q1)),
-            proact[proact$test == 1, ])
+m1 <- mpt(update(spec, .restr = list(p2=p1, p3=p1)),
+          proact[proact$test == 1, ])
+m2 <- mpt(update(spec, .restr = list(q2=q1, q3=q1)), m1$y)
 
-par(mfrow = c(1, 2))                   # residuals versus fitted values
-plot(mpt1, main = "p constrained", ylim = c(-3, 3.5))  # good fit
-plot(mpt2, main = "q constrained", ylim = c(-3, 3.5))  # bad fit
+par(mfrow = c(1, 2))                 # residuals versus fitted values
+plot(m1, main = "p constrained", ylim = c(-3, 3.5))  # good fit
+plot(m2, main = "q constrained", ylim = c(-3, 3.5))  # bad fit
 
-sum( resid(mpt1)^2 )                   # likelihood ratio G2
-sum( resid(mpt1, "pearson")^2 )        # Pearson X2
+sum( resid(m1)^2 )                   # likelihood ratio G2
+sum( resid(m1, "pearson")^2 )        # Pearson X2
 }
 \keyword{models}

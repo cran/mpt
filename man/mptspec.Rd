@@ -58,6 +58,9 @@ mptspec(\dots, .restr = NULL)
     (Batchelder & Riefer, 1986). \code{SR2} is the model without singleton
     items.
 
+  \code{WST}: the inference-guessing model with relaxed assumptions (Klauer,
+    Stahl, & Erdfelder, 2007) for the Wason selection task.
+
   If one of these models is selected, \code{\dots} may include an optional
   \code{.replicates} argument that specifies the number of replicates of the
   model equations, for example, when the same model is applied repeatedly in
@@ -118,6 +121,12 @@ mptspec(\dots, .restr = NULL)
   \bold{36}, 123--134.
   \doi{10.1037/a0017518}
 
+  Klauer, K.C., Stahl, C., & Erdfelder, E. (2007).
+  The abstract selection task: New data and an almost comprehensive model.
+  \emph{Journal of Experimental Psychology: Learning, Memory, and Cognition},
+  \bold{33}, 680--703.
+  \doi{10.1037/0278-7393.33.4.680}
+
   Riefer, D.M., & Batchelder, W.H. (1988).
   Multinomial modeling and the measurement of cognitive processes.
   \emph{Psychological Review}, \bold{95}, 318--339.
@@ -169,13 +178,13 @@ spec3 <- mptspec(
   "2.2" = 1 - b
 )
 
-## Fit one-high-threshold model to data in Broeder & Schuetz (2009)
-mpt1 <- mpt(spec <- mptspec("1HT"), c(55, 35, 45, 765))
+## Fit one-high-threshold model to data in Broeder and Schuetz (2009)
+m <- mpt(spec <- mptspec("1HT"), c(55, 35, 45, 765))
 
 ## Working with the mptspec object
-spec$par2prob(c(0.5, 0.1))        # response probabilities
-spec$par2deriv(coef(mpt1))$deriv  # Jacobian matrix at ML estimate
+spec$par2prob(c(0.5, 0.1))     # response probabilities
+spec$par2deriv(coef(m))$deriv  # Jacobian matrix at ML estimate
 
-## See ?recogROC for further examples.
+## See data(package = "mpt") for application examples.
 }
 \keyword{models}

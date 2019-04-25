@@ -108,12 +108,46 @@ mptspec <- function(..., .restr = NULL)
         "1.3" = 2*(1 - c)*u*(1 - u),
         "1.4" = c*(1 - r) + (1 - c)*(1 - u)^2
       ),
+      "WST" = expression(
+        "1.1"  = (1 - a)*(1 - P)*(1 - p)*(1 - Q)*(1 - q),
+        "1.2"  = a*c*(1 - d)*(1 - sb)*i +
+                 (1 - a)*(1 - P)*(1 - p)*(1 - Q)*q,
+        "1.3"  = a*c*(1 - d)*sb*i +
+                 (1 - a)*(1 - P)*(1 - p)*Q*(1 - q),
+        "1.4"  = a*(1 - c)*(1 - x)*(1 - d)*i +
+                 (1 - a)*(1 - P)*(1 - p)*Q*q,
+        "1.5"  = a*c*d*(1 - sf)*i +
+                 (1 - a)*(1 - P)*p*(1 - Q)*(1 - q),
+        "1.6"  = a*(1 - c)*x*(1 - sfb)*i +
+                 (1 - a)*(1 - P)*p*(1 - Q)*q,
+        "1.7"  = a*c*d*(1 - sf)*(1 - i) +
+                 a*c*(1 - d)*sb*(1 - i) +
+                 (1 - a)*(1 - P)*p*Q*(1 - q),
+        "1.8"  = (1 - a)*(1 - P)*p*Q*q,
+        "1.9"  = a*c*d*sf*i +
+                 (1 - a)*P*(1 - p)*(1 - Q)*(1 - q),
+        "1.10" = a*c*d*sf*(1 - i) +
+                 a*c*(1 - d)*(1 - sb)*(1 - i) +
+                 (1 - a)*P*(1 - p)*(1 - Q)*q,
+        "1.11" = a*(1 - c)*x*sfb*i +
+                 (1 - a)*P*(1 - p)*Q*(1 - q),
+        "1.12" = (1 - a)*P*(1 - p)*Q*q,
+        "1.13" = a*(1 - c)*(1 - x)*d*i +
+                 (1 - a)*P*p*(1 - Q)*(1 - q),
+        "1.14" = (1 - a)*P*p*(1 - Q)*q,
+        "1.15" = (1 - a)*P*p*Q*(1 - q),
+        "1.16" = a*(1 - c)*x*sfb*(1 - i) +
+                 a*(1 - c)*x*(1 - sfb)*(1 - i) +
+                 a*(1 - c)*(1 - x)*d*(1 - i) +
+                 a*(1 - c)*(1 - x)*(1 - d)*(1 - i) +
+                 (1 - a)*P*p*Q*q
+      ),
       NULL  # model not available
     )
     if(is.null(modcall))
       stop("'...' has to be either an expression or one of:\n",
-           "  '1HT', '2HT', 'PairAsso', 'prospec', 'rmodel', 'SourceMon',",
-            " 'SR', 'SR2'.\n")
+           "  '1HT', '2HT', 'PairAsso', 'prospec', 'rmodel', 'SourceMon',\n",
+           "  'SR', 'SR2', 'WST'.\n")
 
     ## Replicates?
     if (!is.null(spec$.replicates) && spec$.replicates > 1) {

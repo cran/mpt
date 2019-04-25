@@ -80,7 +80,8 @@ mpt(spec, data, start = NULL, method = c("BFGS", "EM"), treeid = "treeid",
 \value{
   An object of class \code{mpt} containing the following components:
 
-  \item{coefficients}{a vector of parameter estimates.}
+  \item{coefficients}{a vector of parameter estimates. For extraction, the
+    \code{coef} function is preferred.}
   \item{loglik}{the log-likelihood of the fitted model.}
   \item{nobs}{the number of nonredundant response categories.}
   \item{fitted}{the fitted response frequencies.}
@@ -116,7 +117,6 @@ mpt(spec, data, start = NULL, method = c("BFGS", "EM"), treeid = "treeid",
 }
 \seealso{
   \code{\link{mptEM}}, \code{\link{mptspec}}, \code{\link{simulate.mpt}},
-  \code{\link{retroact}}, \code{\link{proact}},
   \code{\link{plot.mpt}}, \code{\link{residuals.mpt}},
   \code{\link{logLik.mpt}}, \code{\link{vcov.mpt}}, \code{\link{optim}}.
 }
@@ -132,18 +132,18 @@ spec <- mptspec(
   u,
   1 - u
 )
-mpt1 <- mpt(spec, retroact[retroact$lists == 0, ])
+m <- mpt(spec, retroact[retroact$lists == 0, ])
 
-summary(mpt1)  # parameter estimates, goodness of fit
-plot(mpt1)     # residuals versus predicted values
-confint(mpt1)  # approximate confidence intervals
+summary(m)  # parameter estimates, goodness of fit
+plot(m)     # residuals versus predicted values
+confint(m)  # approximate confidence intervals
 
-plot(coef(mpt1), axes=FALSE, ylim=0:1, pch=16, xlab="",
+plot(coef(m), axes = FALSE, ylim = 0:1, pch = 16, xlab = "",
      ylab="Parameter estimate (MPT model, 95\% CI)")
-axis(1, 1:3, names(coef(mpt1))); axis(2)
-arrows(1:3, plogis(confint(mpt1))[,1], 1:3, plogis(confint(mpt1))[,2],
+axis(1, 1:3, names(coef(m))); axis(2)
+arrows(1:3, plogis(confint(m))[, 1], 1:3, plogis(confint(m))[, 2],
        .05, 90, 3)
 
-## See ?retroact, ?proact, and ?prospecMemory for further examples.
+## See data(package = "mpt") for application examples.
 }
 \keyword{models}

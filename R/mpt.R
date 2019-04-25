@@ -165,6 +165,10 @@ mpt <- function(spec, data, start = NULL, method = c("BFGS", "EM"),
   G2      <- 2*sum(y*log(y/fitted), na.rm=TRUE)
   df      <- nobs - length(coef)
   gof     <- c(G2=G2, df=df, pval = pchisq(G2, df, lower.tail=FALSE))
+  if(df == 0 && abs(G2) < sqrt(.Machine$double.eps)) {
+    gof["G2"] <- 0
+    gof["pval"] <- 1
+  }
 
   rval <- list(
     coefficients = coef,

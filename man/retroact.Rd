@@ -1,17 +1,17 @@
 \name{retroact}
 \alias{retroact}
-\title{Recall Frequencies for a Retroactive Inhibition Experiment}
+\title{Recall Frequencies in Retroactive Inhibition}
 \description{
-  The experiment is described in Riefer and Batchelder (1988).  Each of the
-  75 subjects was presented with either one, two, three, four, or five
-  successive lists of words (15 subjects per group).  These words were shown
-  in random order on a computer screen, one word at a time, at a rate of 5 s
-  per word.  Each list contained 25 words, consisting of 10 categories (with
-  2 associate words per category) and five singletons.  Subjects were given
-  1.5 min to recall in writing the 25 words from each individual list.  After
-  all of the lists had been presented, a final free-recall test was given in
-  which subjects attempted to recall the words from all of the previous
-  lists.  Subjects were given up to 5 min for this final written recall.
+  Riefer and Batchelder (1988) presented each of 75 participants with either
+  one, two, three, four, or five successive lists of words (15 subjects per
+  group).  These words were shown in random order on a computer screen, one
+  word at a time, at a rate of 5 s per word.  Each list contained 25 words,
+  consisting of 10 categories (with 2 associate words per category) and five
+  singletons.  Subjects were given 1.5 min to recall in writing the 25 words
+  from each individual list.  After all of the lists had been presented, a
+  final free-recall test was given in which subjects attempted to recall the
+  words from all of the previous lists.  Subjects were given up to 5 min for
+  this final written recall.
   
   The focus here is on the recall of the first-list words during the final
   recall task.  The responses were classified into six categories and pooled
@@ -38,6 +38,9 @@
   \emph{Psychological Review}, \bold{95}, 318--339.
   \doi{10.1037/0033-295x.95.3.318}
 }
+\seealso{
+  \code{\link{mpt}}.
+}
 \examples{
 data(retroact)
 
@@ -51,19 +54,19 @@ spec <- mptspec(
   1 - u
 )
 pars <- sapply(0:4,
-  function(x) coef(mpt(spec, retroact[retroact$lists == x,])))
+  function(x) coef(mpt(spec, retroact[retroact$lists == x, ])))
 
 ## Figure 3 in Riefer & Batchelder (1988)
-plot(pars["c",] ~ I(0:4), pch=16, type="b", ylim=c(.3, 1),
+plot(pars["c", ] ~ I(0:4), pch=16, type="b", ylim=c(.3, 1),
      xlab="Number of interpolated lists, j",
      ylab="Parameter estimate (Storage-retrieval model)",
      main="Riefer and Batchelder (1988)")
-points(pars["r",] ~ I(0:4), type="b", lty=2)
+points(pars["r", ] ~ I(0:4), type="b", lty=2)
 text(3, .89, expression("Storage of clusters," ~ hat(c)[j]))
 text(3, .46, expression("Retrieval of clusters," ~ hat(r)[j]))
 
-## Testing hypotheses about the parameters
-mpt1 <- mpt(mptspec(
+## Testing effects of interpolated lists
+spec <- mptspec(
   c0*r0,
   (1 - c0)*u0^2,
   2*(1 - c0)*u0*(1 - u0),
@@ -98,14 +101,14 @@ mpt1 <- mpt(mptspec(
   c4*(1 - r4) + (1 - c4)*(1 - u4)^2,
   u4,
   1 - u4
-), retroact)
+)
+m1 <- mpt(spec, retroact)
+m2 <- mpt(update(spec, .restr=list(r0=r, r1=r, r2=r, r3=r, r4=r)),
+          retroact)
+m3 <- mpt(update(spec, .restr=list(c0=c, c1=c, c2=c, c3=c, c4=c)),
+          retroact)
 
-mpt2 <- mpt(update(mpt1$spec, .restr=list(r0=r, r1=r, r2=r, r3=r, r4=r)),
-            retroact)
-mpt3 <- mpt(update(mpt1$spec, .restr=list(c0=c, c1=c, c2=c, c3=c, c4=c)),
-            retroact)
-
-anova(mpt2, mpt1)  # r decreases the more lists have been interpolated
-anova(mpt3, mpt1)  # c remains constant
+anova(m2, m1)  # r decreases the more lists have been interpolated
+anova(m3, m1)  # c remains constant
 }
 \keyword{datasets}
