@@ -30,8 +30,8 @@ mptspec(\dots, .restr = NULL)
   Joint (or product) multinomial models consist of more than a single
   processing tree.  To identify the trees in such a model, expressions may
   have optional names.  Canonically, these names are of the form \code{x.y},
-  where \code{x} is the tree identifier and \code{y} specifies the response
-  category within a tree.
+  where \code{x} is the tree identifier (\code{treeid}) and \code{y} specifies
+  the response category within a tree.
 
   Alternatively, \code{\dots} may be a character string identifying one out of
   a list of prevalent MPT models. Currently implemented are the following
@@ -88,6 +88,7 @@ mptspec(\dots, .restr = NULL)
     derivatives of the model equations.}
   \item{par}{a named vector of parameter values.}
   \item{restr}{a list containing expressions of parameter restrictions.}
+  \item{treeid}{a vector that identifies each tree.}
 }
 \references{
   Batchelder, W.H., & Riefer, D.M. (1986).

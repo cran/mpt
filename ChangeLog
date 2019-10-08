@@ -1,3 +1,8 @@
+Changes in 0.6-1
+
+  * mpt: handle treeid's more flexibly.
+  * mptspec: return treeid so mpt() can use it.
+
 Changes in 0.6-0
 
   * mptspec("WST"): return specification of inference-guessing model (Klauer,

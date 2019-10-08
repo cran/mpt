@@ -1,3 +1,5 @@
+# Aug/15/2019 make treeid depend less on ordering
+#
 # Apr/12/2016 anova.mpt() now works with stats::print.anova()
 #
 # Mar/18/2016 better fix using eval(..., as.list(spec$par)); this renders more
@@ -31,12 +33,14 @@ mpt <- function(spec, data, start = NULL, method = c("BFGS", "EM"),
   ## Either, 'data' is a dataframe
   if(is.data.frame(data)) {
     y <- data[, freqvar]
-    tid <- if(length(treeid) == length(y)) factor(treeid)
+    tid <- if(length(treeid) == length(y))
+             factor(treeid)
            else if(length(treeid) == 1 && treeid %in% names(data))
              factor(data[, treeid])
-           else if(length(names(spec$prob)) == length(y))  # read from spec
-             factor(gsub("^(.+)\\..*", "\\1", names(spec$prob)))
-           else rep(1, length(y))
+           else if(length(spec$treeid) == length(y))  # read from spec
+             spec$treeid
+           else
+             rep(1, length(y))
     data <- matrix(y, nrow=1L)
 
   ## Or a matrix/vector of frequencies
@@ -44,7 +48,7 @@ mpt <- function(spec, data, start = NULL, method = c("BFGS", "EM"),
     ## sanity checking and reordering of data
     if(is.null(dim(data))) data <- matrix(data, nrow=1L,
                                           dimnames=list(NULL, names(data)))
-    if(!is.null(dnam <- colnames(data)) & !is.null(snam <- names(spec$prob))){
+    if(!is.null(dnam <- colnames(data)) && !is.null(snam <- names(spec$prob))){
       if(!all(snam == dnam)) warning("variable names do not match")
       # if(!all(snam %in% dnam)) {
       #   warning("variable names do not match")
@@ -52,12 +56,14 @@ mpt <- function(spec, data, start = NULL, method = c("BFGS", "EM"),
       #   data <- data[, snam, drop = FALSE]
       # }
     }
-    tid <- if(length(treeid) == NCOL(data)) factor(treeid)
-           else if(length(names(spec$prob)) == NCOL(data))
-             factor(gsub("^(.+)\\..*", "\\1", names(spec$prob)))
-           else if(!is.null(colnames(data)))
-             factor(gsub("^(.+)\\..*", "\\1", colnames(data))) # before 1st dot
-           else rep(1, NCOL(data))
+    tid <- if(length(treeid) == NCOL(data))
+             factor(treeid)
+           else if(!is.null(dnam))                     # before 1st dot
+             factor(gsub("([^.]+)\\..*", "\\1", dnam))
+           else if(length(spec$treeid) == NCOL(data))  # read from spec
+             spec$treeid
+           else
+             rep(1, NCOL(data))
   }
   if(NCOL(data) != length(spec$prob))
     stop("number of response categories and model equations do not match")
@@ -151,10 +157,10 @@ mpt <- function(spec, data, start = NULL, method = c("BFGS", "EM"),
     pcat <- opt$pcat
   }
 
-  snam <- if(!is.null(names(spec$prob))) names(spec$prob)
-          else if(!is.null(colnames(data))) colnames(data)
-          else paste(tid, unlist(lapply(rle(as.character(tid))$lengths,
-                                        seq_len)), sep=".")
+  snam <- if(!is.null(colnames(data))) colnames(data)           # from data
+          else if(!is.null(names(spec$prob))) names(spec$prob)  # from spec
+          else ave(as.character(tid), tid,                      # guess
+                   FUN = function(a) paste(a, seq_along(a), sep="."))
   ncat    <- table(tid)
   nobs    <- sum(ncat - 1)
   ntrees  <- length(ncat)

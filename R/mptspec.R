@@ -1,3 +1,5 @@
+# Aug/15/2019 return treeid created from expression names
+#
 # Feb/02/2015 allow for longer expressions and restrictions, and
 #             adjust print method accordingly
 
@@ -26,6 +28,7 @@ mptspec <- function(..., .restr = NULL)
   # and (further below, after default models) turn into list of characters
   spec$.restr <- NULL
   spec <- as.list(spec[-1L])                  # exclude function name
+  treeid <- NULL
 
   if (is.character(whichmod <- spec[[1]])) {  # default models
     modcall <- switch(EXPR = whichmod,
@@ -149,11 +152,14 @@ mptspec <- function(..., .restr = NULL)
            "  '1HT', '2HT', 'PairAsso', 'prospec', 'rmodel', 'SourceMon',\n",
            "  'SR', 'SR2', 'WST'.\n")
 
+    ## Get treeid from names
+    nm <- do.call(rbind, strsplit(names(modcall), "\\."))  # treeid.catid
+    treeid <- as.numeric(nm[, 1])
+
     ## Replicates?
     if (!is.null(spec$.replicates) && spec$.replicates > 1) {
-      nm <- do.call(rbind, strsplit(names(modcall), "\\."))  # treeid.catid
-      ntrees <- max(as.numeric(nm[, 1]))
-      treeid <- rep(as.numeric(nm[, 1]), spec$.replicates) +
+      ntrees <- max(treeid)
+      treeid <- rep(treeid, spec$.replicates) +
                 rep(seq(0, ntrees*(spec$.replicates - 1), ntrees),
                     each=nrow(nm))
       pd <- getParseData(parse(text=modcall, keep.source=TRUE))
@@ -182,6 +188,8 @@ mptspec <- function(..., .restr = NULL)
   ## parsed expressions (list of expressions)
   if(!is.null(restr)) restr <- lapply(restr1[-1L], as.expression)
   prob <- lapply(spec, function(s) parse(text=s, keep.source=TRUE))
+  if(is.null(treeid) && !is.null(names(prob)))
+    treeid <- gsub("([^.]+)\\..*", "\\1", names(prob))  # guess from names
 
   ## extract the parameters
   pars <- unique(unlist(lapply(prob, function(e) {
@@ -251,7 +259,8 @@ mptspec <- function(..., .restr = NULL)
     prob = prob,
     deriv = deriv,
     par = pars,
-    restr = restr
+    restr = restr,
+    treeid = if(!is.null(treeid)) factor(treeid)
   )
   class(retval) <- "mptspec"
   retval
