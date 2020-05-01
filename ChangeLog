@@ -1,7 +1,13 @@
+Changes in 0.6-2
+
+  * recogROC: add replication data for Broeder and Schuetz (2009,
+    Experiment 3)
+  * Small adjustments for R >= 4.0.0 features
+
 Changes in 0.6-1
 
-  * mpt: handle treeid's more flexibly.
-  * mptspec: return treeid so mpt() can use it.
+  * mpt: handle treeid's more flexibly
+  * mptspec: return treeid so mpt() can use it
 
 Changes in 0.6-0
 

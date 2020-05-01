@@ -46,7 +46,7 @@ simulate(m)
 ## Parametric bootstrap of goodness-of-fit test
 LR.stat <- replicate(200, deviance(mpt(m$spec, simulate(m))))
 
-hist(LR.stat, col="lightgray", border="white", freq=FALSE, breaks=20,
+hist(LR.stat, border="white", freq=FALSE, breaks=20,
      main="Parametric bootstrap")
 curve(dchisq(x, df=1), add=TRUE)
 abline(v=deviance(m), lty=2)

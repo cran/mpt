@@ -34,7 +34,7 @@
     \item{\code{treeid}}{an identifier for the single trees of the joint
       multinomial model.}
   }
-  \code{PMreplication} A data frame containing 72 observations on five
+  \code{PMreplication} A data frame containing 72 observations of five
     variables:
   \describe{
     \item{\code{gender}}{factor. Participant gender.}

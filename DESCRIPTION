@@ -1,13 +1,13 @@
 Package: mpt
-Version: 0.6-1
-Date: 2019-10-08
+Version: 0.6-2
+Date: 2020-04-30
 Title: Multinomial Processing Tree Models
 Authors@R: c(person(given = "Florian", family = "Wickelmaier",
                     role = c("aut", "cre"), email = "wickelmaier@web.de"),
              person(given = "Achim", family = "Zeileis", role = "aut",
 	            email = "Achim.Zeileis@R-project.org",
                     comment = c(ORCID = "0000-0003-0918-3766")))
-Depends: R (>= 3.0.0), stats
+Depends: R (>= 3.5.0), stats
 Imports: graphics, utils
 Description: Fitting and testing multinomial processing tree (MPT) models, a
   class of nonlinear models for categorical data.  The parameters are the
@@ -19,9 +19,9 @@ Description: Fitting and testing multinomial processing tree (MPT) models, a
 License: GPL (>= 2)
 URL: http://www.mathpsy.uni-tuebingen.de/wickelmaier
 NeedsCompilation: no
-Packaged: 2019-10-08 10:12:06 UTC; siifw01
+Packaged: 2020-04-30 09:41:21 UTC; siifw01
 Author: Florian Wickelmaier [aut, cre],
   Achim Zeileis [aut] (<https://orcid.org/0000-0003-0918-3766>)
 Maintainer: Florian Wickelmaier <wickelmaier@web.de>
 Repository: CRAN
-Date/Publication: 2019-10-08 10:40:02 UTC
+Date/Publication: 2020-05-01 06:50:07 UTC
