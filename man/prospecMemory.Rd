@@ -38,9 +38,9 @@
     variables:
   \describe{
     \item{\code{gender}}{factor. Participant gender.}
-    \item{\code{age}}{Participant age.}
+    \item{\code{age}}{participant age.}
     \item{\code{instr}}{factor. Instruction type.}
-    \item{\code{rtdiff}}{Average response time difference (in milliseconds)
+    \item{\code{rtdiff}}{average response time difference (in milliseconds)
       between color-matching and prospective-memory task.}
     \item{\code{y}}{a matrix of aggregate response frequencies per
       participant. The column names indicate each of twelve response

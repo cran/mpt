@@ -46,6 +46,10 @@ mptspec(\dots, .restr = NULL)
   \code{PairAsso}: the paired-associate learning model (Riefer & Batchelder,
     1988).
 
+  \code{proCNI}: the CNI model of moral dilemma judgment for proscriptive
+    norms (Hennig & Huetter, 2020).  The general formula includes the process
+    dissociation (PD) model (Conway & Gawronski, 2013) as a special case.
+
   \code{prospec}: the event-based prospective memory model (Smith & Bayen,
     2004).
 
@@ -114,6 +118,20 @@ mptspec(\dots, .restr = NULL)
   \emph{Journal of Experimental Psychology: Learning, Memory, and Cognition},
   \bold{35}, 587--606.
   \doi{10.1037/a0015279}
+
+  Conway, P., & Gawronski, B. (2013).
+  Deontological and utilitarian inclinations in moral decision making:
+  A process dissociation approach.
+  \emph{Journal of Personality and Social Psychology},
+  \bold{104}, 216--235.
+  \doi{10.1037/a0031021}
+
+  Hennig, M., & Huetter, M. (2020).
+  Revisiting the divide between deontology and utilitarianism in moral
+  dilemma judgment: A multinomial modeling approach.
+  \emph{Journal of Personality and Social Psychology}
+  \bold{118}, 22--56.
+  \doi{10.1037/pspa0000173}
 
   Hilbig, B.E., Erdfelder, E., & Pohl, R.F. (2010).
   One-reason decision-making unveiled: A measurement model of the recognition

@@ -16,7 +16,7 @@
   \describe{
     \item{\code{id}}{factor. Participant ID.}
     \item{\code{gender}}{factor. Participant gender.}
-    \item{\code{age}}{Participant age.}
+    \item{\code{age}}{participant age.}
     \item{\code{condition}}{factor. In \code{congruent} trials, positive words
       were presented at the top, negative words at the bottom, and vice versa
       for \code{incongruent} trials.}

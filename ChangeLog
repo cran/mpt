@@ -1,3 +1,12 @@
+Changes in 0.7-0
+
+  * mptspec("proCNI"): return specification of proCNI model of moral dilemma
+    judgment (Hennig & Huetter, 2020)
+  * moraldilemma (new data sets): moral dilemma judgment data (Hennig &
+    Huetter, 2020) and replication data for Experiment 2b
+  * citysize: add replication data for Hilbig et al. (2010, Experiment 7)
+  * selectiontask: add replication data for Klauer et al. (2007, Experiment 1)
+
 Changes in 0.6-2
 
   * recogROC: add replication data for Broeder and Schuetz (2009,

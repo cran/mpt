@@ -30,7 +30,7 @@
     variables:
   \describe{
     \item{\code{gender}}{factor. Participant gender.}
-    \item{\code{age}}{Participant age.}
+    \item{\code{age}}{participant age.}
     \item{\code{arith}}{number of mental-arithmetic problems solved.}
     \item{\code{lexical}}{number of correct trials in lexical selection task.}
     \item{\code{y}}{a matrix of aggregate response frequencies per
