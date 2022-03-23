@@ -40,7 +40,7 @@ mpt(spec, data, start = NULL, method = c("BFGS", "EM"), treeid = "treeid",
   \item{method}{optimization method. Implemented are
     \code{optim(..., method = "BFGS")} and the EM algorithm.}
   \item{treeid}{name of the variable that identifies the processing trees
-    of a joint multinomial model. Alternatively, a vector that identifies each
+    of a joint multinomial model. Alternatively, a factor that identifies each
     tree.}
   \item{freqvar}{if \code{data} is a data frame, name of the variable that
     holds the response frequencies; else ignored.}
@@ -92,7 +92,7 @@ mpt(spec, data, start = NULL, method = c("BFGS", "EM"), treeid = "treeid",
   \item{n}{the total number of observations per tree.}
   \item{y}{the vector of response frequencies.}
   \item{pcat}{the predicted probabilities for each response category.}
-  \item{treeid}{a vector that identifies each tree.}
+  \item{treeid}{a factor that identifies each tree.}
   \item{a, b, c}{structural constants passed to \code{\link{mptEM}}.}
   \item{spec}{the MPT model specification returned by \code{\link{mptspec}}.}
   \item{method}{the optimization method used.}
@@ -101,18 +101,18 @@ mpt(spec, data, start = NULL, method = c("BFGS", "EM"), treeid = "treeid",
 \references{
   Batchelder, W.H., & Riefer, D.M. (1999).
   Theoretical and empirical review of multinomial process tree modeling.
-  \emph{Psychonomic Bulletin & Review}, \bold{6}, 57--86.
+  \emph{Psychonomic Bulletin & Review}, \bold{6}(1), 57--86.
   \doi{10.3758/bf03210812}
 
   Erdfelder, E., Auer, T., Hilbig, B.E., Assfalg, A., Moshagen, M., &
   Nadarevic, L. (2009).
   Multinomial processing tree models: A review of the literature.
-  \emph{Zeitschrift fuer Psychologie}, \bold{217}, 108--124.
+  \emph{Zeitschrift fuer Psychologie}, \bold{217}(3), 108--124.
   \doi{10.1027/0044-3409.217.3.108}
 
   Riefer, D.M., & Batchelder, W.H. (1988).
   Multinomial modeling and the measurement of cognitive processes.
-  \emph{Psychological Review}, \bold{95}, 318--339.
+  \emph{Psychological Review}, \bold{95}(3), 318--339.
   \doi{10.1037/0033-295x.95.3.318}
 }
 \seealso{

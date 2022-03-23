@@ -64,14 +64,14 @@
   One-reason decision-making unveiled: A measurement model of the recognition
   heuristic.
   \emph{Journal of Experimental Psychology: Learning, Memory, and Cognition},
-  \bold{36}, 123--134.
+  \bold{36}(1), 123--134.
   \doi{10.1037/a0017518}
 
   Castela, M., Kellen, D., Erdfelder, E., & Hilbig, B.E. (2014).
   The impact of subjective recognition experiences on recognition heuristic
   use: A multinomial processing tree approach.
   \emph{Psychonomic Bulletin & Review},
-  \bold{21}, 1131--1138.
+  \bold{21}(5), 1131--1138.
   \doi{10.3758/s13423-014-0587-4}
 
   Rettich, A. (2020).

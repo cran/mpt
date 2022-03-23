@@ -1,3 +1,11 @@
+Changes in 0.8-0
+
+  * mptspec: accept .replicates for user-provided model specifications; handle
+    equation names more flexibly
+  * update.mptspec: recognize .replicates argument
+  * mpt: accept 1d tables as data; always return treeid as factor
+  * *.Rd: update references
+
 Changes in 0.7-0
 
   * mptspec("proCNI"): return specification of proCNI model of moral dilemma

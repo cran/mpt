@@ -44,7 +44,7 @@
   Recognition ROCs are curvilinear--or are they? On premature arguments
   against the two-high-threshold model of recognition.
   \emph{Journal of Experimental Psychology: Learning, Memory, and Cognition},
-  \bold{35}, 587--606.
+  \bold{35}(3), 587--606.
   \doi{10.1037/a0015279}
 
   Wellingerhof, P. (2019).

@@ -48,7 +48,7 @@
   Klauer, K.C., Stahl, C., & Erdfelder, E. (2007).
   The abstract selection task: New data and an almost comprehensive model.
   \emph{Journal of Experimental Psychology: Learning, Memory, and Cognition},
-  \bold{33}, 680--703.
+  \bold{33}(4), 680--703.
   \doi{10.1037/0278-7393.33.4.680}
 
   Bauder, D. (2020).

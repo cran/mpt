@@ -34,20 +34,20 @@ mpt <- function(spec, data, start = NULL, method = c("BFGS", "EM"),
   if(is.data.frame(data)) {
     y <- data[, freqvar]
     tid <- if(length(treeid) == length(y))
-             factor(treeid)
+             treeid
            else if(length(treeid) == 1 && treeid %in% names(data))
-             factor(data[, treeid])
+             data[, treeid]
            else if(length(spec$treeid) == length(y))  # read from spec
              spec$treeid
            else
              rep(1, length(y))
     data <- matrix(y, nrow=1L)
 
-  ## Or a matrix/vector of frequencies
+  ## Or a matrix/table/vector of frequencies
   } else {
     ## sanity checking and reordering of data
-    if(is.null(dim(data))) data <- matrix(data, nrow=1L,
-                                          dimnames=list(NULL, names(data)))
+    if(is.null(dim(data)) || length(dim(data)) < 2)
+      data <- matrix(data, nrow=1L, dimnames=list(NULL, names(data)))
     if(!is.null(dnam <- colnames(data)) && !is.null(snam <- names(spec$prob))){
       if(!all(snam == dnam)) warning("variable names do not match")
       # if(!all(snam %in% dnam)) {
@@ -57,14 +57,17 @@ mpt <- function(spec, data, start = NULL, method = c("BFGS", "EM"),
       # }
     }
     tid <- if(length(treeid) == NCOL(data))
-             factor(treeid)
-           else if(!is.null(dnam))                     # before 1st dot
-             factor(gsub("([^.]+)\\..*", "\\1", dnam))
-           else if(length(spec$treeid) == NCOL(data))  # read from spec
+             treeid
+           else if(!is.null(dnam)) {                     # before 1st dot
+             tid <- gsub("([^.]+)\\..*", "\\1", dnam)
+             factor(tid, levels = unique(tid))           # keep order
+           } else if(length(spec$treeid) == NCOL(data))  # read from spec
              spec$treeid
            else
              rep(1, NCOL(data))
   }
+
+  tid <- factor(tid)  # make sure treeid is always factor
   if(NCOL(data) != length(spec$prob))
     stop("number of response categories and model equations do not match")
 
@@ -308,8 +311,8 @@ vcov.mpt <- function(object, logit = FALSE, what = c("vcov", "fisher"),
 
 
 ## Based on stats::confint.default
-confint.mpt <- function(object, parm, level = 0.95, logit = TRUE, ...)
-{
+confint.mpt <- function(object, parm, level = 0.95, logit = TRUE,
+                        ...){
   cf <- coef(object, logit=logit)
   pnames <- names(cf)
   if (missing(parm)) 
@@ -348,8 +351,8 @@ print.mpt <- function(x, digits = max(3, getOption("digits") - 3),
 }
 
 
+## Adapted form MASS::anova.polr and stats::anova.glmlist
 anova.mpt <- function(object, ..., test = c("Chisq", "none")){
-  ## Adapted form MASS::anova.polr and stats::anova.glmlist
 
   test <- match.arg(test)
   dots <- list(...)
@@ -405,8 +408,8 @@ nobs.mpt <- function(object, ...) object$nobs
 
 
 ## Residuals for mpt models
-residuals.mpt <- function(object, type=c("deviance", "pearson"), ...){
-
+residuals.mpt <- function(object, type=c("deviance", "pearson"),
+                          ...){
   dev.resids <- function(y, mu, wt)
     2 * wt * (y * log(ifelse(y == 0, 1, y/mu)) - (y - mu))
 
@@ -538,17 +541,17 @@ print.summary.mpt <- function(x, digits = max(3, getOption("digits") - 3),
 
 
 ## Simulate responses from mpt model
-simulate.mpt <- function(object, nsim, seed, pool = TRUE, ...){
-
+simulate.mpt <- function(object, nsim, seed, pool = TRUE,
+                         ...){
   if(pool){
     tid  <- object$treeid
-    freq <- unlist( lapply(unique(tid),
-      function(i) rmultinom(1, object$n[tid == i], object$pcat[tid == i])) )
-    names(freq) <- tid
+    freq <- unlist( lapply(levels(tid),
+      function(i) drop(rmultinom(1, object$n[tid == i],  # drop() keeps names
+                                 object$pcat[tid == i]))) )
   }else{
     stop("individual response simulation not yet implemented")
   }
-  setNames(freq, names(object$fitted))
+  freq[names(object$pcat)]
 }
 
 

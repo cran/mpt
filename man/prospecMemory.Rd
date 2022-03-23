@@ -55,7 +55,7 @@
   Smith, R.E., & Bayen, U.J. (2004).
   A multinomial model of event-based prospective memory.
   \emph{Journal of Experimental Psychology: Learning, Memory, and Cognition},
-  \bold{30}, 756--777.
+  \bold{30}(4), 756--777.
   \doi{10.1037/0278-7393.30.4.756}
 
   For the replication study, data were collected at the Department of
