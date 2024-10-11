@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Florian Wickelmaier" />
+
+<meta name="date" content="2024-10-11" />
+
+<title>MPT Modeling: Basics, Identifiability, Power</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">
+
+div.csl-bib-body { }
+div.csl-entry {
+clear: both;
+margin-bottom: 0em;
+}
+.hanging div.csl-entry {
+margin-left:2em;
+text-indent:-2em;
+}
+div.csl-left-margin {
+min-width:2em;
+float:left;
+}
+div.csl-right-inline {
+margin-left:2em;
+padding-left:1em;
+}
+div.csl-indent {
+margin-left: 2em;
+}
+</style>
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">MPT Modeling: Basics, Identifiability,
+Power</h1>
+<h4 class="author">Florian Wickelmaier</h4>
+<h4 class="date">2024-10-11</h4>
+
+
+<div id="TOC">
+<ul>
+<li><a href="#basics" id="toc-basics">Basics</a>
+<ul>
+<li><a href="#age-differences-in-episodic-memory" id="toc-age-differences-in-episodic-memory">Age differences in episodic
+memory</a></li>
+<li><a href="#specifying-and-fitting-an-mpt-model" id="toc-specifying-and-fitting-an-mpt-model">Specifying and fitting an
+MPT model</a></li>
+<li><a href="#model-output" id="toc-model-output">Model output</a></li>
+<li><a href="#exercise-one-high-threshold-model" id="toc-exercise-one-high-threshold-model">Exercise: one-high-threshold
+model</a></li>
+<li><a href="#detour-numerical-optimization-by-hand" id="toc-detour-numerical-optimization-by-hand">Detour: numerical
+optimization by hand</a></li>
+<li><a href="#exercise-numerical-optimization-by-hand" id="toc-exercise-numerical-optimization-by-hand">Exercise: numerical
+optimization by hand</a></li>
+<li><a href="#model-comparison" id="toc-model-comparison">Model
+comparison</a></li>
+<li><a href="#exercise-age-group-model" id="toc-exercise-age-group-model">Exercise: age-group model</a></li>
+<li><a href="#reparameterization-order-constraints" id="toc-reparameterization-order-constraints">Reparameterization: order
+constraints</a></li>
+<li><a href="#testing-interactions" id="toc-testing-interactions">Testing interactions</a></li>
+<li><a href="#exercise-age-lag-interaction" id="toc-exercise-age-lag-interaction">Exercise: age-lag
+interaction</a></li>
+</ul></li>
+<li><a href="#identifiability" id="toc-identifiability">Identifiability</a>
+<ul>
+<li><a href="#jacobian-matrix" id="toc-jacobian-matrix">Jacobian
+matrix</a></li>
+<li><a href="#simulated-identifiability" id="toc-simulated-identifiability">Simulated identifiability</a></li>
+<li><a href="#exercise-identifiability" id="toc-exercise-identifiability">Exercise: identifiability</a></li>
+</ul></li>
+<li><a href="#power-analysis" id="toc-power-analysis">Power analysis</a>
+<ul>
+<li><a href="#check-simulation-setup-parameter-recovery" id="toc-check-simulation-setup-parameter-recovery">Check simulation
+setup: parameter recovery</a></li>
+<li><a href="#exercise-parameter-recovery" id="toc-exercise-parameter-recovery">Exercise: parameter
+recovery</a></li>
+<li><a href="#power-simulation-goodness-of-fit-test" id="toc-power-simulation-goodness-of-fit-test">Power simulation:
+goodness-of-fit test</a></li>
+<li><a href="#power-simulation-age-differences-in-retrieval" id="toc-power-simulation-age-differences-in-retrieval">Power simulation:
+age differences in retrieval</a></li>
+<li><a href="#exercise-power-simulation" id="toc-exercise-power-simulation">Exercise: power simulation</a></li>
+</ul></li>
+<li><a href="#references" id="toc-references">References</a></li>
+</ul>
+</div>
+
+<p>This vignette illustrates some basic use cases of the <em>mpt</em>
+package, how to check for model identifiability, and how to perform
+simulation-based power analysis.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(mpt)</span></code></pre></div>
+<p>The examples have been inspired by</p>
+<p>Schmidt, O., Erdfelder, E., &amp; Heck, D. W. <span class="citation">(2023)</span>. How to develop, test, and extend
+multinomial processing tree models: A tutorial. <em>Psychological
+Methods</em>. <a href="https://doi.org/10.1037/met0000561" class="uri">https://doi.org/10.1037/met0000561</a></p>
+<div id="basics" class="section level1">
+<h1>Basics</h1>
+<div id="age-differences-in-episodic-memory" class="section level2">
+<h2>Age differences in episodic memory</h2>
+<p><span class="citation">Bayen (1990)</span> presented 40 younger and
+40 older adults with a list of 50 words to be learned. The list
+consisted of 20 semantic word pairs and 10 singleton words. In a later
+memory test, participants freely recalled the presented words. For
+pairs, responses were classified into four categories: both words in a
+pair are recalled adjacently (<em>E1</em>) or non-adjacently
+(<em>E2</em>), one word in a pair is recalled (<em>E3</em>), neither
+word in a pair is recalled (<em>E4</em>); for singletons, into two
+categories: word recalled (<em>F1</em>), word not recalled
+(<em>F2</em>).</p>
+<p>The individual recall frequencies are available in <span class="citation">Schmidt, Erdfelder, and Heck (2023)</span>, see
+<code>?agememory</code>. Displayed below are the aggregate recall
+frequencies for pairs and singletons by age group and lag condition.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>dat <span class="ot">&lt;-</span> <span class="fu">read.table</span>(<span class="at">header =</span> <span class="cn">TRUE</span>, <span class="at">text =</span> <span class="st">&quot;</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="st">  lag age resp freq</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="st">    0 young E1 90     # adjacent recall: apple, banana</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="st">    0 young E2 14     # non-adjacent recall: apple, ..., banana</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="st">    0 young E3 84     # single recall: only apple or only banana</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="st">    0 young E4 212    # non-recall: neither apple nor banana</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="st">  n/a young F1 102    # recall</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="st">  n/a young F2 298    # non-recall</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="st">    0 old   E1 42</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="st">    0 old   E2 5</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="st">    0 old   E3 63</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="st">    0 old   E4 290</span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="st">  n/a old   F1 64</span></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="st">  n/a old   F2 336</span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="st">   15 young E1 67</span></span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="st">   15 young E2 18</span></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="st">   15 young E3 123</span></span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a><span class="st">   15 young E4 192</span></span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a><span class="st">   15 old   E1 30</span></span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a><span class="st">   15 old   E2 13</span></span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a><span class="st">   15 old   E3 95</span></span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a><span class="st">   15 old   E4 262</span></span>
+<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a><span class="st">&quot;</span>)</span>
+<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a>dat<span class="sc">$</span>age <span class="ot">&lt;-</span> <span class="fu">factor</span>(dat<span class="sc">$</span>age, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">&quot;young&quot;</span>, <span class="st">&quot;old&quot;</span>))</span></code></pre></div>
+</div>
+<div id="specifying-and-fitting-an-mpt-model" class="section level2">
+<h2>Specifying and fitting an MPT model</h2>
+<p>Specifying and fitting an MPT model involves two steps:
+<code>mptspec()</code> specifies the model, <code>mpt()</code> fits it
+to the data.</p>
+<p>For example, the storage-retrieval pair-clustering model for a single
+condition consists of two multinomial category systems (trees): one for
+pairs, one for singletons. The dot notation in <code>mptspec()</code>
+can be used to identify the trees.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># Pairs                    Singletons</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co">#      </span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#     /r -- E1</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co">#    c</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co">#   / \1-r -- E4             a -- F1       c: cluster storage</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#  /                        /              r: cluster retrieval</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#  \       /u -- E2         \              u: non-clustered storage/retrieval</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#   \     u                  1-a -- F2     a: singleton storage/retrieval</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#    \   / \1-u -- E3</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#     1-c</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#        \   /u -- E3</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#         1-u</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#            \1-u -- E4</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="fu">mptspec</span>(                                                 <span class="co"># specify model</span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>  <span class="at">E.1 =</span> c<span class="sc">*</span>r,</span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>  <span class="at">E.2 =</span> (<span class="dv">1</span> <span class="sc">-</span> c)<span class="sc">*</span>u<span class="sc">^</span><span class="dv">2</span>,                                     <span class="co"># dot notation:</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>  <span class="at">E.3 =</span> <span class="dv">2</span> <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> c)<span class="sc">*</span>u<span class="sc">*</span>(<span class="dv">1</span> <span class="sc">-</span> u),                           <span class="co">#   tree.response</span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a>  <span class="at">E.4 =</span> c<span class="sc">*</span>(<span class="dv">1</span> <span class="sc">-</span> r) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">-</span> c)<span class="sc">*</span>(<span class="dv">1</span> <span class="sc">-</span> u)<span class="sc">^</span><span class="dv">2</span>,</span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a>  <span class="at">F.1 =</span> a,</span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a>  <span class="at">F.2 =</span> <span class="dv">1</span> <span class="sc">-</span> a,</span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a>  <span class="at">.restr =</span> <span class="fu">list</span>(<span class="at">a =</span> u)</span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a>  <span class="fu">mpt</span>(<span class="at">data =</span> dat[dat<span class="sc">$</span>lag <span class="sc">!=</span> <span class="dv">15</span> <span class="sc">&amp;</span> dat<span class="sc">$</span>age <span class="sc">==</span> <span class="st">&quot;young&quot;</span>, ])  <span class="co"># fit to data</span></span></code></pre></div>
+<pre><code>## 
+## Multinomial processing tree (MPT) models
+## 
+## Parameter estimates:
+##      c       r       u  
+## 0.4481  0.5021  0.2543  
+## 
+## Goodness of fit (2 log likelihood ratio):
+##  G2(1) = 0.007307, p = 0.9319</code></pre>
+<p>Alternatively, some model structures are pre-specified and can be
+called by passing a string label, see <code>?mptspec</code>.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>m <span class="ot">&lt;-</span> <span class="fu">mpt</span>(<span class="fu">mptspec</span>(<span class="st">&quot;SR&quot;</span>),</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>         <span class="at">data =</span> dat[dat<span class="sc">$</span>lag <span class="sc">!=</span> <span class="dv">15</span> <span class="sc">&amp;</span> dat<span class="sc">$</span>age <span class="sc">==</span> <span class="st">&quot;young&quot;</span>, ])</span></code></pre></div>
+</div>
+<div id="model-output" class="section level2">
+<h2>Model output</h2>
+<p>Standard extractor functions work on the model object.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">print</span>(m)</span></code></pre></div>
+<pre><code>## 
+## Multinomial processing tree (MPT) models
+## 
+## Parameter estimates:
+##      c       r       u  
+## 0.4481  0.5021  0.2543  
+## 
+## Goodness of fit (2 log likelihood ratio):
+##  G2(1) = 0.007307, p = 0.9319</code></pre>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">summary</span>(m)</span></code></pre></div>
+<pre><code>## 
+## Coefficients:
+##   Estimate Logit Estim. Std. Error z value Pr(&gt;|z|)    
+## c   0.4481    -0.208231   0.247619  -0.841    0.400    
+## r   0.5021     0.008348   0.291927   0.029    0.977    
+## u   0.2543    -1.075762   0.106569 -10.094   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Likelihood ratio G2: 0.007307 on 1 df, p-value: 0.9319 
+## Pearson X2: 0.007273,    AIC: 28.642
+## Number of trees: 2</code></pre>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="fu">logLik</span>(m)</span></code></pre></div>
+<pre><code>## &#39;log Lik.&#39; -11.32105 (df=3)</code></pre>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="fu">AIC</span>(m)</span></code></pre></div>
+<pre><code>## [1] 28.64211</code></pre>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="fu">BIC</span>(m)</span></code></pre></div>
+<pre><code>## [1] 26.80099</code></pre>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="fu">coef</span>(m)</span></code></pre></div>
+<pre><code>##         c         r         u 
+## 0.4481295 0.5020870 0.2543089</code></pre>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a><span class="fu">confint</span>(m, <span class="at">logit =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+<pre><code>##       2.5 %    97.5 %
+## c 0.3281043 0.5681547
+## r 0.3590481 0.6451259
+## u 0.2146992 0.2939186</code></pre>
+</div>
+<div id="exercise-one-high-threshold-model" class="section level2">
+<h2>Exercise: one-high-threshold model</h2>
+<ol style="list-style-type: lower-alpha">
+<li>Use <code>mptspec()</code> to specify the one-high-threshold
+model:</li>
+</ol>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a><span class="co"># Target                  Distractor</span></span>
+<span id="cb20-2"><a href="#cb20-2" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb20-3"><a href="#cb20-3" tabindex="-1"></a><span class="co">#   r -- Hit</span></span>
+<span id="cb20-4"><a href="#cb20-4" tabindex="-1"></a><span class="co">#  /             } 55      b -- FA    45</span></span>
+<span id="cb20-5"><a href="#cb20-5" tabindex="-1"></a><span class="co"># /    b -- Hit           /                  r: recognition</span></span>
+<span id="cb20-6"><a href="#cb20-6" tabindex="-1"></a><span class="co"># \   /                   \                  b: bias</span></span>
+<span id="cb20-7"><a href="#cb20-7" tabindex="-1"></a><span class="co">#  1-r                     1-b -- CR 765</span></span>
+<span id="cb20-8"><a href="#cb20-8" tabindex="-1"></a><span class="co">#     \</span></span>
+<span id="cb20-9"><a href="#cb20-9" tabindex="-1"></a><span class="co">#      1-b -- Miss 35</span></span></code></pre></div>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Use <code>mpt()</code> to fit the model to the response frequencies
+<span class="citation">(taken from Bröder and Schütz 2009, see
+<code>?recogROC</code>)</span>.</li>
+</ol>
+</div>
+<div id="detour-numerical-optimization-by-hand" class="section level2">
+<h2>Detour: numerical optimization by hand</h2>
+<p>There are two parameter estimation methods available in
+<code>mpt()</code>. One is an application of the EM algorithm <span class="citation">(Hu 1999)</span>. The other (the default) uses
+<code>optim()</code>’s BFGS method with analytic gradients.</p>
+<p>A simplified version of the latter is illustrated here. It requires
+two parts. First, a function that returns the negative log-likelihood of
+the MPT model.</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a>nll <span class="ot">&lt;-</span> <span class="cf">function</span>(theta, data, treeid) {   <span class="co"># negative log-likelihood</span></span>
+<span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a>  c <span class="ot">&lt;-</span> theta[<span class="dv">1</span>]</span>
+<span id="cb21-3"><a href="#cb21-3" tabindex="-1"></a>  r <span class="ot">&lt;-</span> theta[<span class="dv">2</span>]</span>
+<span id="cb21-4"><a href="#cb21-4" tabindex="-1"></a>  u <span class="ot">&lt;-</span> theta[<span class="dv">3</span>]</span>
+<span id="cb21-5"><a href="#cb21-5" tabindex="-1"></a>  a <span class="ot">&lt;-</span> theta[<span class="dv">3</span>]  <span class="co"># a = u</span></span>
+<span id="cb21-6"><a href="#cb21-6" tabindex="-1"></a>  pcat <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb21-7"><a href="#cb21-7" tabindex="-1"></a>    <span class="at">E.1 =</span> c<span class="sc">*</span>r,</span>
+<span id="cb21-8"><a href="#cb21-8" tabindex="-1"></a>    <span class="at">E.2 =</span> (<span class="dv">1</span> <span class="sc">-</span> c)<span class="sc">*</span>u<span class="sc">^</span><span class="dv">2</span>,</span>
+<span id="cb21-9"><a href="#cb21-9" tabindex="-1"></a>    <span class="at">E.3 =</span> <span class="dv">2</span> <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> c)<span class="sc">*</span>u<span class="sc">*</span>(<span class="dv">1</span> <span class="sc">-</span> u),</span>
+<span id="cb21-10"><a href="#cb21-10" tabindex="-1"></a>    <span class="at">E.4 =</span> c<span class="sc">*</span>(<span class="dv">1</span> <span class="sc">-</span> r) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">-</span> c)<span class="sc">*</span>(<span class="dv">1</span> <span class="sc">-</span> u)<span class="sc">^</span><span class="dv">2</span>,</span>
+<span id="cb21-11"><a href="#cb21-11" tabindex="-1"></a>    <span class="at">F.1 =</span> a,</span>
+<span id="cb21-12"><a href="#cb21-12" tabindex="-1"></a>    <span class="at">F.2 =</span> <span class="dv">1</span> <span class="sc">-</span> a</span>
+<span id="cb21-13"><a href="#cb21-13" tabindex="-1"></a>  )</span>
+<span id="cb21-14"><a href="#cb21-14" tabindex="-1"></a>  <span class="sc">-</span><span class="fu">sum</span>(</span>
+<span id="cb21-15"><a href="#cb21-15" tabindex="-1"></a>    <span class="fu">dmultinom</span>(data[treeid <span class="sc">==</span> <span class="dv">1</span>], <span class="at">size =</span> <span class="fu">sum</span>(data[treeid <span class="sc">==</span> <span class="dv">1</span>]),</span>
+<span id="cb21-16"><a href="#cb21-16" tabindex="-1"></a>              <span class="at">prob =</span> pcat[treeid <span class="sc">==</span> <span class="dv">1</span>], <span class="at">log =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb21-17"><a href="#cb21-17" tabindex="-1"></a>    <span class="fu">dmultinom</span>(data[treeid <span class="sc">==</span> <span class="dv">2</span>], <span class="at">size =</span> <span class="fu">sum</span>(data[treeid <span class="sc">==</span> <span class="dv">2</span>]),</span>
+<span id="cb21-18"><a href="#cb21-18" tabindex="-1"></a>              <span class="at">prob =</span> pcat[treeid <span class="sc">==</span> <span class="dv">2</span>], <span class="at">log =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb21-19"><a href="#cb21-19" tabindex="-1"></a>  )</span>
+<span id="cb21-20"><a href="#cb21-20" tabindex="-1"></a>}</span></code></pre></div>
+<p>Second, a call to <code>optim()</code> passing the function as an
+argument.</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a><span class="fu">optim</span>(<span class="at">par =</span> <span class="fu">c</span>(.<span class="dv">5</span>, .<span class="dv">5</span>, .<span class="dv">5</span>),                    <span class="co"># starting values</span></span>
+<span id="cb22-2"><a href="#cb22-2" tabindex="-1"></a>       <span class="at">fn =</span> nll,                              <span class="co"># function to be minimized</span></span>
+<span id="cb22-3"><a href="#cb22-3" tabindex="-1"></a>     <span class="at">data =</span> dat[dat<span class="sc">$</span>lag <span class="sc">!=</span> <span class="dv">15</span> <span class="sc">&amp;</span></span>
+<span id="cb22-4"><a href="#cb22-4" tabindex="-1"></a>                dat<span class="sc">$</span>age <span class="sc">==</span> <span class="st">&quot;young&quot;</span>, <span class="st">&quot;freq&quot;</span>],  <span class="co"># arguments passed to fn</span></span>
+<span id="cb22-5"><a href="#cb22-5" tabindex="-1"></a>   <span class="at">treeid =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">2</span>),</span>
+<span id="cb22-6"><a href="#cb22-6" tabindex="-1"></a>   <span class="at">method =</span> <span class="st">&quot;L-BFGS-B&quot;</span>,                       <span class="co"># algorithm</span></span>
+<span id="cb22-7"><a href="#cb22-7" tabindex="-1"></a>    <span class="at">lower =</span> <span class="fu">rep</span>(.<span class="dv">001</span>, <span class="dv">3</span>),                     <span class="co"># boundaries</span></span>
+<span id="cb22-8"><a href="#cb22-8" tabindex="-1"></a>    <span class="at">upper =</span> <span class="fu">rep</span>(.<span class="dv">999</span>, <span class="dv">3</span>),</span>
+<span id="cb22-9"><a href="#cb22-9" tabindex="-1"></a>  <span class="at">hessian =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<pre><code>## $par
+## [1] 0.4481327 0.5020844 0.2543100
+## 
+## $value
+## [1] 11.32105
+## 
+## $counts
+## function gradient 
+##       12       12 
+## 
+## $convergence
+## [1] 0
+## 
+## $message
+## [1] &quot;CONVERGENCE: REL_REDUCTION_OF_F &lt;= FACTR*EPSMCH&quot;
+## 
+## $hessian
+##           [,1]     [,2]      [,3]
+## [1,]  772.4919 419.6633 -560.4388
+## [2,]  419.6633 508.5846  278.3646
+## [3,] -560.4388 278.3646 4065.7657</code></pre>
+</div>
+<div id="exercise-numerical-optimization-by-hand" class="section level2">
+<h2>Exercise: numerical optimization by hand</h2>
+<ol style="list-style-type: lower-alpha">
+<li><p>Write an R function that returns the negative log-likelihood of
+the one-high-threshold model.</p></li>
+<li><p>Use <code>optim()</code> to estimate the parameters for the
+example data from before.</p></li>
+<li><p>Compare the results to the output of <code>mpt()</code>.</p></li>
+</ol>
+</div>
+<div id="model-comparison" class="section level2">
+<h2>Model comparison</h2>
+<p>Model comparison is a two-step procedure. First, specify and fit a
+restricted model, where the restriction corresponds to the hypothesis
+being tested (here, H<sub>0</sub>: <span class="math inline">\(c =
+0.5\)</span>).</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" tabindex="-1"></a>m0 <span class="ot">&lt;-</span></span>
+<span id="cb24-2"><a href="#cb24-2" tabindex="-1"></a>  <span class="fu">update</span>(m<span class="sc">$</span>spec, <span class="at">.restr =</span> <span class="fu">list</span>(<span class="at">c =</span> <span class="fl">0.5</span>)) <span class="sc">|&gt;</span>  <span class="co"># specify restriction(s)</span></span>
+<span id="cb24-3"><a href="#cb24-3" tabindex="-1"></a>  <span class="fu">mpt</span>(<span class="at">data =</span> m<span class="sc">$</span>y) <span class="sc">|&gt;</span>                         <span class="co"># refit</span></span>
+<span id="cb24-4"><a href="#cb24-4" tabindex="-1"></a>  <span class="fu">print</span>()</span></code></pre></div>
+<pre><code>## 
+## Multinomial processing tree (MPT) models
+## 
+## Parameter estimates:
+##      r       u  
+## 0.4591  0.2649  
+## 
+## Goodness of fit (2 log likelihood ratio):
+##  G2(2) = 0.7907, p = 0.6735</code></pre>
+<p>Second, test the hypothesis by comparing the likelihoods of the
+restricted and the unrestricted models.</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" tabindex="-1"></a><span class="fu">anova</span>(m0, m)</span></code></pre></div>
+<pre><code>## Analysis of Deviance Table
+## 
+## Model 1: m0
+## Model 2: m
+##   Resid. Df Resid. Dev Df Deviance Pr(&gt;Chi)
+## 1         2    0.79066                     
+## 2         1    0.00731  1  0.78335   0.3761</code></pre>
+</div>
+<div id="exercise-age-group-model" class="section level2">
+<h2>Exercise: age-group model</h2>
+<ol style="list-style-type: lower-alpha">
+<li><p>Fit a storage-retrieval pair-clustering model that jointly
+accounts for young and old participants (ignoring the lag-15
+pairs).</p></li>
+<li><p>Test the age effect on</p></li>
+</ol>
+<ul>
+<li>the <span class="math inline">\(c\)</span> parameter</li>
+<li>the <span class="math inline">\(r\)</span> parameter.</li>
+</ul>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Discuss the results.</li>
+</ol>
+</div>
+<div id="reparameterization-order-constraints" class="section level2">
+<h2>Reparameterization: order constraints</h2>
+<p>Consider the storage-retrieval pair-clustering model for young and
+old participants in its original parameterization.</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" tabindex="-1"></a>m1 <span class="ot">&lt;-</span> <span class="fu">mptspec</span>(<span class="st">&quot;SR&quot;</span>, <span class="at">.replicates =</span> <span class="dv">2</span>) <span class="sc">|&gt;</span></span>
+<span id="cb28-2"><a href="#cb28-2" tabindex="-1"></a>  <span class="fu">mpt</span>(<span class="at">data =</span> dat[dat<span class="sc">$</span>lag <span class="sc">!=</span> <span class="dv">15</span>, ]) <span class="sc">|&gt;</span></span>
+<span id="cb28-3"><a href="#cb28-3" tabindex="-1"></a>  <span class="fu">print</span>()</span></code></pre></div>
+<pre><code>## 
+## Multinomial processing tree (MPT) models
+## 
+## Parameter estimates:
+##     c1      r1      u1      c2      r2      u2  
+## 0.4481  0.5021  0.2543  0.4156  0.2526  0.1579  
+## 
+## Goodness of fit (2 log likelihood ratio):
+##  G2(2) = 0.1554, p = 0.9252</code></pre>
+<p>An alternative parameterization substitutes <span class="math inline">\(c_{old} = s \cdot c_{young}\)</span>, where <span class="math inline">\(s \in (0, 1)\)</span> is a shrinkage parameter
+that enforces the order constraint <span class="math inline">\(c_{old}
+\leq c_{young}\)</span>.</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" tabindex="-1"></a><span class="fu">update</span>(m1<span class="sc">$</span>spec, <span class="at">.restr =</span> <span class="fu">list</span>(<span class="at">c2 =</span> s <span class="sc">*</span> c1)) <span class="sc">|&gt;</span></span>
+<span id="cb30-2"><a href="#cb30-2" tabindex="-1"></a>  <span class="fu">mpt</span>(<span class="at">data =</span> m1<span class="sc">$</span>y)</span></code></pre></div>
+<pre><code>## 
+## Multinomial processing tree (MPT) models
+## 
+## Parameter estimates:
+##     c1      r1      u1       s      r2      u2  
+## 0.4481  0.5021  0.2543  0.9275  0.2526  0.1579  
+## 
+## Goodness of fit (2 log likelihood ratio):
+##  G2(2) = 0.1554, p = 0.9252</code></pre>
+</div>
+<div id="testing-interactions" class="section level2">
+<h2>Testing interactions</h2>
+<p>The idea of shrinkage parameters is useful for testing interaction
+hypotheses:</p>
+<p>H<sub>0</sub>: Age decline in <span class="math inline">\(c\)</span>
+and <span class="math inline">\(r\)</span> parameters is equally strong
+(no interaction between memory process and age), <span class="math inline">\(s_c = s_r\)</span>.</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" tabindex="-1"></a>m5 <span class="ot">&lt;-</span></span>
+<span id="cb32-2"><a href="#cb32-2" tabindex="-1"></a>  <span class="fu">update</span>(m1<span class="sc">$</span>spec, <span class="at">.restr =</span> <span class="fu">list</span>(<span class="at">c2 =</span> s_c <span class="sc">*</span> c1,      <span class="co"># two shrinkage pars</span></span>
+<span id="cb32-3"><a href="#cb32-3" tabindex="-1"></a>                                <span class="at">r2 =</span> s_r <span class="sc">*</span> r1)) <span class="sc">|&gt;</span></span>
+<span id="cb32-4"><a href="#cb32-4" tabindex="-1"></a>  <span class="fu">mpt</span>(<span class="at">data =</span> m1<span class="sc">$</span>y)</span>
+<span id="cb32-5"><a href="#cb32-5" tabindex="-1"></a>m6 <span class="ot">&lt;-</span></span>
+<span id="cb32-6"><a href="#cb32-6" tabindex="-1"></a>  <span class="fu">update</span>(m5<span class="sc">$</span>spec, <span class="at">.restr =</span> <span class="fu">list</span>(<span class="at">s_c =</span> s_r)) <span class="sc">|&gt;</span>      <span class="co"># single shrinkage par</span></span>
+<span id="cb32-7"><a href="#cb32-7" tabindex="-1"></a>  <span class="fu">mpt</span>(<span class="at">data =</span> m1<span class="sc">$</span>y)</span>
+<span id="cb32-8"><a href="#cb32-8" tabindex="-1"></a><span class="fu">anova</span>(m6, m5)</span></code></pre></div>
+<pre><code>## Analysis of Deviance Table
+## 
+## Model 1: m6
+## Model 2: m5
+##   Resid. Df Resid. Dev Df Deviance Pr(&gt;Chi)
+## 1         3    1.29956                     
+## 2         2    0.15539  1   1.1442   0.2848</code></pre>
+</div>
+<div id="exercise-age-lag-interaction" class="section level2">
+<h2>Exercise: age-lag interaction</h2>
+<ol style="list-style-type: lower-alpha">
+<li>Fit a storage-retrieval pair-clustering model that jointly accounts
+for all observations:</li>
+</ol>
+<ul>
+<li>young and old participants</li>
+<li>lag-0 pairs, singletons, lag-15 pairs.</li>
+</ul>
+<p>The resulting model has four sets of <span class="math inline">\(c\)</span>, <span class="math inline">\(r\)</span>, and <span class="math inline">\(u\)</span> parameters (but be careful: singletons
+have no lag!).</p>
+<ol start="2" style="list-style-type: lower-alpha">
+<li><p>Refine the previous model such that it includes only a single
+<span class="math inline">\(u_{young}\)</span> and a single <span class="math inline">\(u_{old}\)</span> parameter.</p></li>
+<li><p>Reparameterize the refined model to account for an age-decline
+effect on the <span class="math inline">\(r\)</span> parameters.
+Include</p></li>
+</ol>
+<ul>
+<li>a shrinkage parameter for lag-0 pairs</li>
+<li>a shrinkage parameter for lag-15 pairs.</li>
+</ul>
+<ol start="4" style="list-style-type: lower-alpha">
+<li>Test whether age decline is equally strong in both lag conditions.
+Discuss the results.</li>
+</ol>
+</div>
+</div>
+<div id="identifiability" class="section level1">
+<h1>Identifiability</h1>
+<div id="jacobian-matrix" class="section level2">
+<h2>Jacobian matrix</h2>
+<p>A model is locally identifiable if its prediction function in the
+neighborhood of some parameter values is one to one, so that its
+Jacobian (the matrix of partial derivatives) will have full rank.</p>
+<p>In the storage-retrieval pair-clustering model, one might assume that
+processing of non-clustered words in a pair differs for the first and
+the second word. This implies two different parameters (<span class="math inline">\(u_1\)</span> and <span class="math inline">\(u_2\)</span>) and thus renders the model
+non-identifiable.</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" tabindex="-1"></a>s1 <span class="ot">&lt;-</span> <span class="fu">mptspec</span>(                         <span class="co"># not identifiable: 5 parameters</span></span>
+<span id="cb34-2"><a href="#cb34-2" tabindex="-1"></a>  <span class="at">E.1 =</span> c <span class="sc">*</span> r,</span>
+<span id="cb34-3"><a href="#cb34-3" tabindex="-1"></a>  <span class="at">E.2 =</span> (<span class="dv">1</span> <span class="sc">-</span> c) <span class="sc">*</span> u1 <span class="sc">*</span> u2,</span>
+<span id="cb34-4"><a href="#cb34-4" tabindex="-1"></a>  <span class="at">E.3 =</span> (<span class="dv">1</span> <span class="sc">-</span> c) <span class="sc">*</span> u1 <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> u2) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">-</span> c) <span class="sc">*</span> u2 <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> u1),</span>
+<span id="cb34-5"><a href="#cb34-5" tabindex="-1"></a>  <span class="at">E.4 =</span> c <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> r) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">-</span> c) <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> u1) <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> u2),</span>
+<span id="cb34-6"><a href="#cb34-6" tabindex="-1"></a>  <span class="at">F.1 =</span> a,</span>
+<span id="cb34-7"><a href="#cb34-7" tabindex="-1"></a>  <span class="at">F.2 =</span> <span class="dv">1</span> <span class="sc">-</span> a</span>
+<span id="cb34-8"><a href="#cb34-8" tabindex="-1"></a>)</span></code></pre></div>
+<p>Its Jacobian at random parameter location is rank deficient: the rank
+is less than its number of parameters.</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" tabindex="-1"></a><span class="fu">runif</span>(<span class="dv">5</span>) <span class="sc">|&gt;</span> s1<span class="sc">$</span><span class="fu">par2deriv</span>() <span class="sc">|&gt;</span> _<span class="sc">$</span>deriv <span class="sc">|&gt;</span> <span class="fu">print</span>() <span class="sc">|&gt;</span> <span class="fu">qr</span>() <span class="sc">|&gt;</span> _<span class="sc">$</span>rank</span></code></pre></div>
+<pre><code>##           E.1         E.2        E.3        E.4 F.1 F.2
+## c  0.04732983 -0.10270071 -0.5632964  0.6186673   0   0
+## r  0.46842641  0.00000000  0.0000000 -0.4684264   0   0
+## u1 0.00000000  0.31710280 -0.1026320 -0.2144708   0   0
+## u2 0.00000000  0.09151666  0.3485403 -0.4400569   0   0
+## a  0.00000000  0.00000000  0.0000000  0.0000000   1  -1</code></pre>
+<pre><code>## [1] 4</code></pre>
+<p>Setting <span class="math inline">\(u_1 = u_2\)</span> makes the
+model identifiable. Its Jacobian has full rank.</p>
+<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" tabindex="-1"></a>s2 <span class="ot">&lt;-</span> <span class="fu">update</span>(s1, <span class="at">.restr =</span> <span class="fu">list</span>(<span class="at">u1 =</span> u, <span class="at">u2 =</span> u))  <span class="co"># make it identifiable</span></span>
+<span id="cb38-2"><a href="#cb38-2" tabindex="-1"></a><span class="fu">runif</span>(<span class="dv">4</span>) <span class="sc">|&gt;</span> s2<span class="sc">$</span><span class="fu">par2deriv</span>() <span class="sc">|&gt;</span> _<span class="sc">$</span>deriv <span class="sc">|&gt;</span> <span class="fu">print</span>() <span class="sc">|&gt;</span> <span class="fu">qr</span>() <span class="sc">|&gt;</span> _<span class="sc">$</span>rank</span></code></pre></div>
+<pre><code>##         E.1         E.2        E.3        E.4 F.1 F.2
+## c 0.7256432 -0.01705329 -0.2270699 -0.4815200   0   0
+## r 0.3567334  0.00000000  0.0000000 -0.3567334   0   0
+## u 0.0000000  0.16800613  0.9505210 -1.1185271   0   0
+## a 0.0000000  0.00000000  0.0000000  0.0000000   1  -1</code></pre>
+<pre><code>## [1] 4</code></pre>
+</div>
+<div id="simulated-identifiability" class="section level2">
+<h2>Simulated identifiability</h2>
+<p>Another quick check of local identifiability is to re-estimate the
+model from random starting values. If the model converges to the same
+maximum but has non-unique estimates, it possibly is not
+identifiable.</p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" tabindex="-1"></a><span class="fu">suppressWarnings</span>(<span class="fu">replicate</span>(<span class="dv">10</span>,</span>
+<span id="cb41-2"><a href="#cb41-2" tabindex="-1"></a>  <span class="fu">mpt</span>(s1, <span class="at">data =</span> dat[dat<span class="sc">$</span>lag <span class="sc">!=</span> <span class="dv">15</span> <span class="sc">&amp;</span> dat<span class="sc">$</span>age <span class="sc">==</span> <span class="st">&quot;young&quot;</span>, ],</span>
+<span id="cb41-3"><a href="#cb41-3" tabindex="-1"></a>      <span class="at">start =</span> <span class="fu">runif</span>(<span class="dv">5</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb41-4"><a href="#cb41-4" tabindex="-1"></a>  <span class="fu">coef</span>()</span>
+<span id="cb41-5"><a href="#cb41-5" tabindex="-1"></a>)) <span class="sc">|&gt;</span> <span class="fu">t</span>()  <span class="co"># not identifiable: parameter trade-offs</span></span></code></pre></div>
+<pre><code>##               c         r        u1        u2         a
+##  [1,] 0.7423224 0.3031028 0.9425163 0.1441128 0.2550000
+##  [2,] 0.5529095 0.4069382 0.4537418 0.1725297 0.2550000
+##  [3,] 0.5834305 0.3856500 0.5061639 0.1659929 0.2550000
+##  [4,] 0.6678801 0.3368867 0.6904356 0.1526337 0.2550000
+##  [5,] 0.4422502 0.5087617 0.2669200 0.2350972 0.2550000
+##  [6,] 0.6734033 0.3341237 0.7054056 0.1519208 0.2550000
+##  [7,] 0.7168590 0.3138693 0.8421181 0.1467886 0.2549999
+##  [8,] 0.6908334 0.3256936 0.7558943 0.1497668 0.2550001
+##  [9,] 0.7507914 0.2996838 0.9802879 0.1432687 0.2550000
+## [10,] 0.6101037 0.3687898 0.5569680 0.1611717 0.2550000</code></pre>
+<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" tabindex="-1"></a><span class="fu">replicate</span>(<span class="dv">10</span>,</span>
+<span id="cb43-2"><a href="#cb43-2" tabindex="-1"></a>  <span class="fu">mpt</span>(s2, <span class="at">data =</span> dat[dat<span class="sc">$</span>lag <span class="sc">!=</span> <span class="dv">15</span> <span class="sc">&amp;</span> dat<span class="sc">$</span>age <span class="sc">==</span> <span class="st">&quot;young&quot;</span>, ],</span>
+<span id="cb43-3"><a href="#cb43-3" tabindex="-1"></a>      <span class="at">start =</span> <span class="fu">runif</span>(<span class="dv">4</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb43-4"><a href="#cb43-4" tabindex="-1"></a>  <span class="fu">coef</span>()</span>
+<span id="cb43-5"><a href="#cb43-5" tabindex="-1"></a>) <span class="sc">|&gt;</span> <span class="fu">t</span>()   <span class="co"># identifiable: unique estimates</span></span></code></pre></div>
+<pre><code>##               c         r         u     a
+##  [1,] 0.4400000 0.5113636 0.2500000 0.255
+##  [2,] 0.4400000 0.5113636 0.2500000 0.255
+##  [3,] 0.4399999 0.5113636 0.2499999 0.255
+##  [4,] 0.4400000 0.5113636 0.2500000 0.255
+##  [5,] 0.4400000 0.5113637 0.2500000 0.255
+##  [6,] 0.4400000 0.5113636 0.2500000 0.255
+##  [7,] 0.4399993 0.5113643 0.2499996 0.255
+##  [8,] 0.4400000 0.5113636 0.2500000 0.255
+##  [9,] 0.4400000 0.5113636 0.2500000 0.255
+## [10,] 0.4400000 0.5113636 0.2500000 0.255</code></pre>
+</div>
+<div id="exercise-identifiability" class="section level2">
+<h2>Exercise: identifiability</h2>
+<ol style="list-style-type: lower-alpha">
+<li>Specify a one-high-threshold model that is limited to target items
+only and check its identifiability by</li>
+</ol>
+<ul>
+<li>computing the rank of the Jacobian</li>
+<li>re-estimating the parameters from random starting values.</li>
+</ul>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Fix the bias parameter to, e.g., <span class="math inline">\(b =
+0.2\)</span> and redo the identifiability checks. What do you
+notice?</li>
+</ol>
+</div>
+</div>
+<div id="power-analysis" class="section level1">
+<h1>Power analysis</h1>
+<p>Simulation-based power analysis involves four steps <span class="citation">(e.g., Wickelmaier 2022)</span>: specifying a model
+that includes the effect of interest, generating data from the model,
+testing the null hypothesis, repeating data generation and testing. The
+proportion of times the test turns out significant is an estimate of its
+power.</p>
+<div id="check-simulation-setup-parameter-recovery" class="section level2">
+<h2>Check simulation setup: parameter recovery</h2>
+<p>Set up a data generator.</p>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" tabindex="-1"></a>s <span class="ot">&lt;-</span> <span class="fu">mptspec</span>(</span>
+<span id="cb45-2"><a href="#cb45-2" tabindex="-1"></a>  <span class="at">E.1 =</span> c <span class="sc">*</span> r,</span>
+<span id="cb45-3"><a href="#cb45-3" tabindex="-1"></a>  <span class="at">E.2 =</span> (<span class="dv">1</span> <span class="sc">-</span> c) <span class="sc">*</span> u<span class="sc">^</span><span class="dv">2</span>,</span>
+<span id="cb45-4"><a href="#cb45-4" tabindex="-1"></a>  <span class="at">E.3 =</span> <span class="dv">2</span> <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> c) <span class="sc">*</span> u <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> u),</span>
+<span id="cb45-5"><a href="#cb45-5" tabindex="-1"></a>  <span class="at">E.4 =</span> c <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> r) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">-</span> c) <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> u)<span class="sc">^</span><span class="dv">2</span>,</span>
+<span id="cb45-6"><a href="#cb45-6" tabindex="-1"></a>  <span class="at">F.1 =</span> a,</span>
+<span id="cb45-7"><a href="#cb45-7" tabindex="-1"></a>  <span class="at">F.2 =</span> <span class="dv">1</span> <span class="sc">-</span> a</span>
+<span id="cb45-8"><a href="#cb45-8" tabindex="-1"></a>)</span>
+<span id="cb45-9"><a href="#cb45-9" tabindex="-1"></a>s<span class="sc">$</span>par     <span class="co"># before you use par2prob(), carefully check position of parameters!</span></span></code></pre></div>
+<pre><code>##  c  r  u  a 
+## NA NA NA NA</code></pre>
+<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" tabindex="-1"></a>s<span class="sc">$</span><span class="fu">par2prob</span>(<span class="fu">c</span>(<span class="at">c =</span> <span class="fl">0.5</span>, <span class="at">r =</span> <span class="fl">0.5</span>, <span class="at">u =</span> <span class="fl">0.4</span>, <span class="at">a =</span> <span class="fl">0.6</span>))   <span class="co"># evaluate model equations</span></span></code></pre></div>
+<pre><code>##  E.1  E.2  E.3  E.4  F.1  F.2 
+## 0.25 0.08 0.24 0.43 0.60 0.40</code></pre>
+<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" tabindex="-1"></a>dataGen <span class="ot">&lt;-</span> <span class="cf">function</span>(nn, d) {</span>
+<span id="cb49-2"><a href="#cb49-2" tabindex="-1"></a>  <span class="fu">structure</span>(<span class="fu">list</span>(                                            <span class="co"># stub mpt object</span></span>
+<span id="cb49-3"><a href="#cb49-3" tabindex="-1"></a>    <span class="at">treeid =</span> s<span class="sc">$</span>treeid,</span>
+<span id="cb49-4"><a href="#cb49-4" tabindex="-1"></a>         <span class="at">n =</span> <span class="fu">setNames</span>((nn <span class="sc">*</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">1</span>)<span class="sc">/</span><span class="dv">3</span>)[s<span class="sc">$</span>treeid], s<span class="sc">$</span>treeid), <span class="co"># 2:1 ratio</span></span>
+<span id="cb49-5"><a href="#cb49-5" tabindex="-1"></a>      <span class="at">pcat =</span> s<span class="sc">$</span><span class="fu">par2prob</span>(<span class="fu">c</span>(<span class="at">c =</span> <span class="fl">0.5</span>, <span class="at">r =</span> <span class="fl">0.5</span>,</span>
+<span id="cb49-6"><a href="#cb49-6" tabindex="-1"></a>                          <span class="at">u =</span> <span class="fl">0.5</span> <span class="sc">-</span> d<span class="sc">/</span><span class="dv">2</span>, <span class="at">a =</span> <span class="fl">0.5</span> <span class="sc">+</span> d<span class="sc">/</span><span class="dv">2</span>))</span>
+<span id="cb49-7"><a href="#cb49-7" tabindex="-1"></a>  ), <span class="at">class =</span> <span class="st">&quot;mpt&quot;</span>) <span class="sc">|&gt;</span></span>
+<span id="cb49-8"><a href="#cb49-8" tabindex="-1"></a>    <span class="fu">simulate</span>()</span>
+<span id="cb49-9"><a href="#cb49-9" tabindex="-1"></a>}</span>
+<span id="cb49-10"><a href="#cb49-10" tabindex="-1"></a><span class="fu">dataGen</span>(<span class="dv">960</span>, <span class="fl">0.2</span>)</span></code></pre></div>
+<pre><code>## E.1 E.2 E.3 E.4 F.1 F.2 
+## 159  52 138 291 194 126</code></pre>
+<p>Try to recover the parameter values from the generated responses.</p>
+<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" tabindex="-1"></a><span class="fu">replicate</span>(<span class="dv">20</span>, <span class="fu">dataGen</span>(<span class="dv">960</span>, <span class="fl">0.2</span>) <span class="sc">|&gt;</span> <span class="fu">mpt</span>(s, <span class="at">data =</span> _) <span class="sc">|&gt;</span> <span class="fu">coef</span>()) <span class="sc">|&gt;</span></span>
+<span id="cb51-2"><a href="#cb51-2" tabindex="-1"></a>  <span class="fu">t</span>() <span class="sc">|&gt;</span></span>
+<span id="cb51-3"><a href="#cb51-3" tabindex="-1"></a>  <span class="fu">boxplot</span>(<span class="at">horizontal =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+</div>
+<div id="exercise-parameter-recovery" class="section level2">
+<h2>Exercise: parameter recovery</h2>
+<p>Run your own parameter recovery:</p>
+<ul>
+<li>Set up a data generator that outputs responses from the
+one-high-threshold model. Set, e.g., <span class="math inline">\(r =
+0.6\)</span>, <span class="math inline">\(b = 0.2\)</span>.</li>
+<li>Fit the model to the generated data and estimate its
+parameters.</li>
+<li>Repeat the generation and estimation steps 20 times and draw a
+boxplot of the estimates.</li>
+</ul>
+<p>Did you succeed in recovering the parameters?</p>
+</div>
+<div id="power-simulation-goodness-of-fit-test" class="section level2">
+<h2>Power simulation: goodness-of-fit test</h2>
+<p>The first example is a power analysis of the goodness-of-fit test of
+the storage-retrieval pair-clustering model. The model assumes identical
+processing of non-clustered pairs and singletons, so H<sub>0</sub>:
+<span class="math inline">\(a = u\)</span>.</p>
+<p>Set up a function that calls the data generator, performs the test,
+and returns its p value.</p>
+<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" tabindex="-1"></a>testFun <span class="ot">&lt;-</span> <span class="cf">function</span>(nn, d) {</span>
+<span id="cb52-2"><a href="#cb52-2" tabindex="-1"></a>  y <span class="ot">&lt;-</span> <span class="fu">dataGen</span>(nn, d)                            <span class="co"># generate data with effect</span></span>
+<span id="cb52-3"><a href="#cb52-3" tabindex="-1"></a>  m1 <span class="ot">&lt;-</span> <span class="fu">mpt</span>(s, y)</span>
+<span id="cb52-4"><a href="#cb52-4" tabindex="-1"></a>  m2 <span class="ot">&lt;-</span> <span class="fu">mpt</span>(<span class="fu">update</span>(s, <span class="at">.restr =</span> <span class="fu">list</span>(<span class="at">a =</span> u)), y)</span>
+<span id="cb52-5"><a href="#cb52-5" tabindex="-1"></a>  <span class="fu">anova</span>(m2, m1)<span class="sc">$</span><span class="st">&quot;Pr(&gt;Chi)&quot;</span>[<span class="dv">2</span>]                    <span class="co"># test H0, return p value</span></span>
+<span id="cb52-6"><a href="#cb52-6" tabindex="-1"></a>}</span></code></pre></div>
+<p>Repeating the data generation and testing steps for each condition
+may take some time, depending on the model, the number of conditions,
+and the number of replications.</p>
+<div class="sourceCode" id="cb53"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" tabindex="-1"></a><span class="co"># pwrsim1 &lt;- expand.grid(d = seq(0, 0.5, 0.1), n = 30 * 2^(0:5))</span></span>
+<span id="cb53-2"><a href="#cb53-2" tabindex="-1"></a><span class="co"># </span></span>
+<span id="cb53-3"><a href="#cb53-3" tabindex="-1"></a><span class="co"># system.time(  # about 20 min</span></span>
+<span id="cb53-4"><a href="#cb53-4" tabindex="-1"></a><span class="co">#   pwrsim1$pval &lt;-</span></span>
+<span id="cb53-5"><a href="#cb53-5" tabindex="-1"></a><span class="co">#     mapply(function(nn, d) replicate(500, testFun(nn, d)),</span></span>
+<span id="cb53-6"><a href="#cb53-6" tabindex="-1"></a><span class="co">#            nn = pwrsim1$n, d = pwrsim1$d, SIMPLIFY = FALSE)</span></span>
+<span id="cb53-7"><a href="#cb53-7" tabindex="-1"></a><span class="co"># )</span></span>
+<span id="cb53-8"><a href="#cb53-8" tabindex="-1"></a><span class="co"># pwrsim1$pwr &lt;- sapply(pwrsim1$pval, function(p) mean(p &lt; .05))</span></span>
+<span id="cb53-9"><a href="#cb53-9" tabindex="-1"></a><span class="co"># }</span></span></code></pre></div>
+<p>To save a bit of time, the above simulation has been pre-run, see
+<code>?pwrsim</code>, and results are reused here for illustration.</p>
+<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" tabindex="-1"></a><span class="fu">data</span>(pwrsim)  <span class="co"># provides pwrsim1 and pwrsim2</span></span>
+<span id="cb54-2"><a href="#cb54-2" tabindex="-1"></a><span class="cf">if</span>(<span class="fu">requireNamespace</span>(<span class="st">&quot;lattice&quot;</span>)) {</span>
+<span id="cb54-3"><a href="#cb54-3" tabindex="-1"></a>  lattice<span class="sc">::</span><span class="fu">xyplot</span>(pwr <span class="sc">~</span> d, pwrsim1, <span class="at">groups =</span> n, <span class="at">type =</span> <span class="fu">c</span>(<span class="st">&quot;g&quot;</span>, <span class="st">&quot;b&quot;</span>),</span>
+<span id="cb54-4"><a href="#cb54-4" tabindex="-1"></a>                  <span class="at">auto.key =</span> <span class="fu">list</span>(<span class="at">space =</span> <span class="st">&quot;right&quot;</span>),</span>
+<span id="cb54-5"><a href="#cb54-5" tabindex="-1"></a>                  <span class="at">xlab =</span> <span class="st">&quot;Parameter difference a - u&quot;</span>,</span>
+<span id="cb54-6"><a href="#cb54-6" tabindex="-1"></a>                  <span class="at">ylab =</span> <span class="st">&quot;Simulated power&quot;</span>)</span>
+<span id="cb54-7"><a href="#cb54-7" tabindex="-1"></a>}</span></code></pre></div>
+<pre><code>## Lade nötigen Namensraum: lattice</code></pre>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+</div>
+<div id="power-simulation-age-differences-in-retrieval" class="section level2">
+<h2>Power simulation: age differences in retrieval</h2>
+<p>The second example is a power analysis of a test of age differences
+in retrieval. It requires a two-group model, so the hypothesis <span class="math inline">\(r_{young} = r_{old}\)</span> can be tested.</p>
+<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" tabindex="-1"></a>s <span class="ot">&lt;-</span> <span class="fu">mptspec</span>(<span class="st">&quot;SR&quot;</span>, <span class="at">.replicates =</span> <span class="dv">2</span>)</span>
+<span id="cb56-2"><a href="#cb56-2" tabindex="-1"></a></span>
+<span id="cb56-3"><a href="#cb56-3" tabindex="-1"></a>dataGen <span class="ot">&lt;-</span> <span class="cf">function</span>(nn, d) {</span>
+<span id="cb56-4"><a href="#cb56-4" tabindex="-1"></a>  <span class="fu">structure</span>(<span class="fu">list</span>(</span>
+<span id="cb56-5"><a href="#cb56-5" tabindex="-1"></a>    <span class="at">treeid =</span> s<span class="sc">$</span>treeid,</span>
+<span id="cb56-6"><a href="#cb56-6" tabindex="-1"></a>         <span class="at">n =</span> <span class="fu">setNames</span>((nn<span class="sc">/</span><span class="dv">2</span> <span class="sc">*</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">1</span>)<span class="sc">/</span><span class="dv">3</span>)[s<span class="sc">$</span>treeid], s<span class="sc">$</span>treeid),</span>
+<span id="cb56-7"><a href="#cb56-7" tabindex="-1"></a>      <span class="at">pcat =</span> s<span class="sc">$</span><span class="fu">par2prob</span>(<span class="fu">c</span>(<span class="at">c1 =</span> <span class="fl">0.5</span>, <span class="at">r1 =</span> <span class="fl">0.4</span> <span class="sc">+</span> d<span class="sc">/</span><span class="dv">2</span>, <span class="at">u1 =</span> <span class="fl">0.3</span>,   <span class="co"># young</span></span>
+<span id="cb56-8"><a href="#cb56-8" tabindex="-1"></a>                          <span class="at">c2 =</span> <span class="fl">0.5</span>, <span class="at">r2 =</span> <span class="fl">0.4</span> <span class="sc">-</span> d<span class="sc">/</span><span class="dv">2</span>, <span class="at">u2 =</span> <span class="fl">0.3</span>))  <span class="co"># old</span></span>
+<span id="cb56-9"><a href="#cb56-9" tabindex="-1"></a>  ), <span class="at">class =</span> <span class="st">&quot;mpt&quot;</span>) <span class="sc">|&gt;</span></span>
+<span id="cb56-10"><a href="#cb56-10" tabindex="-1"></a>    <span class="fu">simulate</span>(m)</span>
+<span id="cb56-11"><a href="#cb56-11" tabindex="-1"></a>}</span>
+<span id="cb56-12"><a href="#cb56-12" tabindex="-1"></a></span>
+<span id="cb56-13"><a href="#cb56-13" tabindex="-1"></a>testFun <span class="ot">&lt;-</span> <span class="cf">function</span>(nn, d) {</span>
+<span id="cb56-14"><a href="#cb56-14" tabindex="-1"></a>  y <span class="ot">&lt;-</span> <span class="fu">dataGen</span>(nn, d)</span>
+<span id="cb56-15"><a href="#cb56-15" tabindex="-1"></a>  m1 <span class="ot">&lt;-</span> <span class="fu">mpt</span>(s, y)</span>
+<span id="cb56-16"><a href="#cb56-16" tabindex="-1"></a>  m2 <span class="ot">&lt;-</span> <span class="fu">mpt</span>(<span class="fu">update</span>(s, <span class="at">.restr =</span> <span class="fu">list</span>(<span class="at">r1 =</span> r2)), y)</span>
+<span id="cb56-17"><a href="#cb56-17" tabindex="-1"></a>  <span class="fu">anova</span>(m2, m1)<span class="sc">$</span><span class="st">&quot;Pr(&gt;Chi)&quot;</span>[<span class="dv">2</span>]</span>
+<span id="cb56-18"><a href="#cb56-18" tabindex="-1"></a>}</span>
+<span id="cb56-19"><a href="#cb56-19" tabindex="-1"></a></span>
+<span id="cb56-20"><a href="#cb56-20" tabindex="-1"></a><span class="co"># pwrsim2 &lt;- expand.grid(d = seq(0, 0.4, 0.1), n = 120 * 2^(0:2))</span></span>
+<span id="cb56-21"><a href="#cb56-21" tabindex="-1"></a></span>
+<span id="cb56-22"><a href="#cb56-22" tabindex="-1"></a><span class="cf">if</span>(<span class="fu">requireNamespace</span>(<span class="st">&quot;lattice&quot;</span>)) {</span>
+<span id="cb56-23"><a href="#cb56-23" tabindex="-1"></a>  lattice<span class="sc">::</span><span class="fu">xyplot</span>(pwr <span class="sc">~</span> d, pwrsim2, <span class="at">groups =</span> n, <span class="at">type =</span> <span class="fu">c</span>(<span class="st">&quot;g&quot;</span>, <span class="st">&quot;b&quot;</span>),</span>
+<span id="cb56-24"><a href="#cb56-24" tabindex="-1"></a>                  <span class="at">auto.key =</span> <span class="fu">list</span>(<span class="at">space =</span> <span class="st">&quot;right&quot;</span>),</span>
+<span id="cb56-25"><a href="#cb56-25" tabindex="-1"></a>                  <span class="at">xlab =</span> <span class="st">&quot;Parameter difference r1 - r2&quot;</span>,</span>
+<span id="cb56-26"><a href="#cb56-26" tabindex="-1"></a>                  <span class="at">ylab =</span> <span class="st">&quot;Simulated power&quot;</span>)</span>
+<span id="cb56-27"><a href="#cb56-27" tabindex="-1"></a>}</span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+</div>
+<div id="exercise-power-simulation" class="section level2">
+<h2>Exercise: power simulation</h2>
+<p>In the storage-retrieval pair-clustering model, what sample size is
+required to detect a parameter difference <span class="math inline">\(r_{young} - r_{old} = 0.4\)</span> with a power of
+about 0.8?</p>
+<p>Simulate power for</p>
+<ul>
+<li>three or four different sample sizes</li>
+<li>50 or 100 replications each.</li>
+</ul>
+</div>
+</div>
+<div id="references" class="section level1 unnumbered">
+<h1 class="unnumbered">References</h1>
+<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
+<div id="ref-Bayen90" class="csl-entry">
+Bayen, U. J. 1990. <span>“Zur <span>L</span>okalisation <span class="nocase">v</span>on <span>A</span>ltersdifferenzen <span class="nocase">i</span>m <span class="nocase">e</span>pisodischen
+<span>G</span>ed<span>ä</span>chtnis <span>E</span>rwachsener:
+<span>E</span>ine <span>Q</span>uerschnittsuntersuchung <span class="nocase">a</span>uf <span class="nocase">d</span>er
+<span>B</span>asis <span class="nocase">e</span>ines <span class="nocase">m</span>athematischen <span>M</span>odells.”</span>
+<em>Berichte <span>a</span>us <span>d</span>em Psychologischen Institut
+<span>d</span>er Universit<span>ä</span>t Bonn</em> 16: 1–125.
+</div>
+<div id="ref-BroederSchuetz09" class="csl-entry">
+Bröder, A., and J. Schütz. 2009. <span>“Recognition <span>ROC</span>s
+Are Curvilinear—or Are They? <span>O</span>n Premature Arguments Against
+the Two-High-Threshold Model of Recognition.”</span> <em>Journal of
+Experimental Psychology: Learning, Memory, and Cognition</em> 35:
+587–606. <a href="https://doi.org/10.1037/a0024783">https://doi.org/10.1037/a0024783</a>.
+</div>
+<div id="ref-Hu99" class="csl-entry">
+Hu, X. 1999. <span>“Multinomial Processing Tree Models: <span>A</span>n
+Implementation.”</span> <em>Behavior Research Methods, Instruments,
+&amp; Computers</em> 31: 689–95. <a href="https://doi.org/10.3758/BF03200747">https://doi.org/10.3758/BF03200747</a>.
+</div>
+<div id="ref-SchmidtErdfelder23" class="csl-entry">
+Schmidt, O., E. Erdfelder, and D. W. Heck. 2023. <span>“How to Develop,
+Test, and Extend Multinomial Processing Tree Models: <span>A</span>
+Tutorial.”</span> <em>Psychological Methods</em>. <a href="https://doi.org/10.1037/met0000561">https://doi.org/10.1037/met0000561</a>.
+</div>
+<div id="ref-Wickelmaier22" class="csl-entry">
+Wickelmaier, F. 2022. <span>“Simulating the Power of Statistical Tests:
+<span>A</span> Collection of <span>R</span> Examples.”</span>
+<em>ArXiv</em>. <a href="https://doi.org/10.48550/arXiv.2110.09836">https://doi.org/10.48550/arXiv.2110.09836</a>.
+</div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

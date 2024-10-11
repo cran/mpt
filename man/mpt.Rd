@@ -121,7 +121,7 @@ mpt(spec, data, start = NULL, method = c("BFGS", "EM"), treeid = "treeid",
   \code{\link{logLik.mpt}}, \code{\link{vcov.mpt}}, \code{\link{optim}}.
 }
 \examples{
-## Storage-retrieval model for pair clustering (Riefer & Batchelder, 1988)
+## Storage-retrieval pair-clustering model (Riefer & Batchelder, 1988)
 data(retroact)
 
 spec <- mptspec(
@@ -139,7 +139,7 @@ plot(m)     # residuals versus predicted values
 confint(m)  # approximate confidence intervals
 
 plot(coef(m), axes = FALSE, ylim = 0:1, pch = 16, xlab = "",
-     ylab="Parameter estimate (MPT model, 95\% CI)")
+     ylab = "Parameter estimate (MPT model, 95\% CI)")
 axis(1, 1:3, names(coef(m))); axis(2)
 arrows(1:3, plogis(confint(m))[, 1], 1:3, plogis(confint(m))[, 2],
        .05, 90, 3)

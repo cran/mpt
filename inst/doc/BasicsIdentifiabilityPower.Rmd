@@ -1,0 +1,521 @@
+---
+title: "MPT Modeling: Basics, Identifiability, Power"
+author: "Florian Wickelmaier"
+date: "2024-10-11"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+bibliography: mpt.bib
+vignette: >
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteIndexEntry{MPT Modeling: Basics, Identifiability, Power}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+This vignette illustrates some basic use cases of the _mpt_ package, how to
+check for model identifiability, and how to perform simulation-based power
+analysis.
+
+```{r}
+library(mpt)
+```
+
+The examples have been inspired by
+
+Schmidt, O., Erdfelder, E., & Heck, D. W. [-@SchmidtErdfelder23]. How to
+develop, test, and extend multinomial processing tree models: A tutorial.
+_Psychological Methods_. https://doi.org/10.1037/met0000561
+
+
+# Basics
+
+## Age differences in episodic memory
+
+@Bayen90 presented 40 younger and 40 older adults with a list of 50 words to
+be learned.  The list consisted of 20 semantic word pairs and 10 singleton
+words.  In a later memory test, participants freely recalled the presented
+words.  For pairs, responses were classified into four categories: both words
+in a pair are recalled adjacently (_E1_) or non-adjacently (_E2_), one word in
+a pair is recalled (_E3_), neither word in a pair is recalled (_E4_); for
+singletons, into two categories: word recalled (_F1_), word not recalled
+(_F2_).
+
+The individual recall frequencies are available in @SchmidtErdfelder23, see
+`?agememory`.  Displayed below are the aggregate recall frequencies for
+pairs and singletons by age group and lag condition.
+
+```{r}
+dat <- read.table(header = TRUE, text = "
+  lag age resp freq
+    0 young E1 90     # adjacent recall: apple, banana
+    0 young E2 14     # non-adjacent recall: apple, ..., banana
+    0 young E3 84     # single recall: only apple or only banana
+    0 young E4 212    # non-recall: neither apple nor banana
+  n/a young F1 102    # recall
+  n/a young F2 298    # non-recall
+    0 old   E1 42
+    0 old   E2 5
+    0 old   E3 63
+    0 old   E4 290
+  n/a old   F1 64
+  n/a old   F2 336
+   15 young E1 67
+   15 young E2 18
+   15 young E3 123
+   15 young E4 192
+   15 old   E1 30
+   15 old   E2 13
+   15 old   E3 95
+   15 old   E4 262
+")
+dat$age <- factor(dat$age, levels = c("young", "old"))
+```
+
+## Specifying and fitting an MPT model
+
+Specifying and fitting an MPT model involves two steps: `mptspec()` specifies
+the model, `mpt()` fits it to the data.
+
+For example, the storage-retrieval pair-clustering model for a single
+condition consists of two multinomial category systems (trees): one for pairs,
+one for singletons. The dot notation in `mptspec()` can be used to identify
+the trees.
+
+```{r}
+# Pairs                    Singletons
+#      
+#     /r -- E1
+#    c
+#   / \1-r -- E4             a -- F1       c: cluster storage
+#  /                        /              r: cluster retrieval
+#  \       /u -- E2         \              u: non-clustered storage/retrieval
+#   \     u                  1-a -- F2     a: singleton storage/retrieval
+#    \   / \1-u -- E3
+#     1-c
+#        \   /u -- E3
+#         1-u
+#            \1-u -- E4
+mptspec(                                                 # specify model
+  E.1 = c*r,
+  E.2 = (1 - c)*u^2,                                     # dot notation:
+  E.3 = 2 * (1 - c)*u*(1 - u),                           #   tree.response
+  E.4 = c*(1 - r) + (1 - c)*(1 - u)^2,
+  F.1 = a,
+  F.2 = 1 - a,
+  .restr = list(a = u)
+) |>
+  mpt(data = dat[dat$lag != 15 & dat$age == "young", ])  # fit to data
+```
+
+Alternatively, some model structures are pre-specified and can be called by
+passing a string label, see `?mptspec`.
+
+```{r}
+m <- mpt(mptspec("SR"),
+         data = dat[dat$lag != 15 & dat$age == "young", ])
+```
+
+## Model output
+
+Standard extractor functions work on the model object.
+
+```{r}
+print(m)
+summary(m)
+
+logLik(m)
+AIC(m)
+BIC(m)
+
+coef(m)
+confint(m, logit = FALSE)
+```
+
+## Exercise: one-high-threshold model
+
+(a) Use `mptspec()` to specify the one-high-threshold model:
+
+```{r}
+# Target                  Distractor
+#
+#   r -- Hit
+#  /             } 55      b -- FA    45
+# /    b -- Hit           /                  r: recognition
+# \   /                   \                  b: bias
+#  1-r                     1-b -- CR 765
+#     \
+#      1-b -- Miss 35
+```
+
+(b) Use `mpt()` to fit the model to the response frequencies [taken from
+@BroederSchuetz09, see `?recogROC`].
+
+## Detour: numerical optimization by hand
+
+There are two parameter estimation methods available in `mpt()`. One is an
+application of the EM algorithm [@Hu99]. The other (the default) uses
+`optim()`'s BFGS method with analytic gradients.
+
+A simplified version of the latter is illustrated here. It requires two parts.
+First, a function that returns the negative log-likelihood of the MPT model.
+
+```{r}
+nll <- function(theta, data, treeid) {   # negative log-likelihood
+  c <- theta[1]
+  r <- theta[2]
+  u <- theta[3]
+  a <- theta[3]  # a = u
+  pcat <- c(
+    E.1 = c*r,
+    E.2 = (1 - c)*u^2,
+    E.3 = 2 * (1 - c)*u*(1 - u),
+    E.4 = c*(1 - r) + (1 - c)*(1 - u)^2,
+    F.1 = a,
+    F.2 = 1 - a
+  )
+  -sum(
+    dmultinom(data[treeid == 1], size = sum(data[treeid == 1]),
+              prob = pcat[treeid == 1], log = TRUE),
+    dmultinom(data[treeid == 2], size = sum(data[treeid == 2]),
+              prob = pcat[treeid == 2], log = TRUE)
+  )
+}
+```
+
+Second, a call to `optim()` passing the function as an argument.
+
+```{r}
+optim(par = c(.5, .5, .5),                    # starting values
+       fn = nll,                              # function to be minimized
+     data = dat[dat$lag != 15 &
+                dat$age == "young", "freq"],  # arguments passed to fn
+   treeid = c(1, 1, 1, 1, 2, 2),
+   method = "L-BFGS-B",                       # algorithm
+    lower = rep(.001, 3),                     # boundaries
+    upper = rep(.999, 3),
+  hessian = TRUE)
+```
+
+## Exercise: numerical optimization by hand
+
+(a) Write an R function that returns the negative log-likelihood of the
+one-high-threshold model.
+
+(b) Use `optim()` to estimate the parameters for the example data from before.
+
+(c) Compare the results to the output of `mpt()`.
+
+## Model comparison
+
+Model comparison is a two-step procedure. First, specify and fit a restricted
+model, where the restriction corresponds to the hypothesis being tested (here,
+H~0~: $c = 0.5$).
+
+```{r}
+m0 <-
+  update(m$spec, .restr = list(c = 0.5)) |>  # specify restriction(s)
+  mpt(data = m$y) |>                         # refit
+  print()
+```
+
+Second, test the hypothesis by comparing the likelihoods of the restricted and
+the unrestricted models.
+
+```{r}
+anova(m0, m)
+```
+
+## Exercise: age-group model
+
+(a) Fit a storage-retrieval pair-clustering model that jointly accounts for
+young and old participants (ignoring the lag-15 pairs).
+
+(b) Test the age effect on
+  - the $c$ parameter
+  - the $r$ parameter.
+
+(c) Discuss the results.
+
+## Reparameterization: order constraints
+
+Consider the storage-retrieval pair-clustering model for young and old
+participants in its original parameterization.
+
+```{r}
+m1 <- mptspec("SR", .replicates = 2) |>
+  mpt(data = dat[dat$lag != 15, ]) |>
+  print()
+```
+
+An alternative parameterization substitutes $c_{old} = s \cdot c_{young}$,
+where $s \in (0, 1)$ is a shrinkage parameter that enforces the order
+constraint $c_{old} \leq c_{young}$.
+
+```{r}
+update(m1$spec, .restr = list(c2 = s * c1)) |>
+  mpt(data = m1$y)
+```
+
+## Testing interactions
+
+The idea of shrinkage parameters is useful for testing interaction hypotheses:
+
+H~0~: Age decline in $c$ and $r$ parameters is equally strong (no interaction
+between memory process and age), $s_c = s_r$.
+
+```{r}
+m5 <-
+  update(m1$spec, .restr = list(c2 = s_c * c1,      # two shrinkage pars
+                                r2 = s_r * r1)) |>
+  mpt(data = m1$y)
+m6 <-
+  update(m5$spec, .restr = list(s_c = s_r)) |>      # single shrinkage par
+  mpt(data = m1$y)
+anova(m6, m5)
+```
+
+## Exercise: age-lag interaction
+
+(a) Fit a storage-retrieval pair-clustering model that jointly accounts for
+all observations:
+  - young and old participants
+  - lag-0 pairs, singletons, lag-15 pairs.
+
+The resulting model has four sets of $c$, $r$, and $u$ parameters (but be
+careful: singletons have no lag!).
+
+(b) Refine the previous model such that it includes only a single $u_{young}$
+and a single $u_{old}$ parameter.
+
+(c) Reparameterize the refined model to account for an age-decline effect on
+the $r$ parameters. Include
+  - a shrinkage parameter for lag-0 pairs
+  - a shrinkage parameter for lag-15 pairs.
+
+(d) Test whether age decline is equally strong in both lag conditions.
+Discuss the results.
+
+
+# Identifiability
+
+## Jacobian matrix
+
+A model is locally identifiable if its prediction function in the neighborhood
+of some parameter values is one to one, so that its Jacobian (the matrix of
+partial derivatives) will have full rank.
+
+In the storage-retrieval pair-clustering model, one might assume that
+processing of non-clustered words in a pair differs for the first and the
+second word. This implies two different parameters ($u_1$ and $u_2$) and thus
+renders the model non-identifiable.
+
+```{r}
+s1 <- mptspec(                         # not identifiable: 5 parameters
+  E.1 = c * r,
+  E.2 = (1 - c) * u1 * u2,
+  E.3 = (1 - c) * u1 * (1 - u2) + (1 - c) * u2 * (1 - u1),
+  E.4 = c * (1 - r) + (1 - c) * (1 - u1) * (1 - u2),
+  F.1 = a,
+  F.2 = 1 - a
+)
+```
+
+Its Jacobian at random parameter location is rank deficient: the rank is less
+than its number of parameters.
+
+```{r}
+runif(5) |> s1$par2deriv() |> _$deriv |> print() |> qr() |> _$rank
+```
+
+Setting $u_1 = u_2$ makes the model identifiable. Its Jacobian has full rank.
+
+```{r}
+s2 <- update(s1, .restr = list(u1 = u, u2 = u))  # make it identifiable
+runif(4) |> s2$par2deriv() |> _$deriv |> print() |> qr() |> _$rank
+```
+
+## Simulated identifiability
+
+Another quick check of local identifiability is to re-estimate the model from
+random starting values. If the model converges to the same maximum but has
+non-unique estimates, it possibly is not identifiable.
+
+```{r}
+suppressWarnings(replicate(10,
+  mpt(s1, data = dat[dat$lag != 15 & dat$age == "young", ],
+      start = runif(5)) |>
+  coef()
+)) |> t()  # not identifiable: parameter trade-offs
+
+replicate(10,
+  mpt(s2, data = dat[dat$lag != 15 & dat$age == "young", ],
+      start = runif(4)) |>
+  coef()
+) |> t()   # identifiable: unique estimates
+```
+
+## Exercise: identifiability
+
+(a) Specify a one-high-threshold model that is limited to target items only
+and check its identifiability by
+  - computing the rank of the Jacobian
+  - re-estimating the parameters from random starting values.
+
+(b) Fix the bias parameter to, e.g., $b = 0.2$ and redo the identifiability
+checks. What do you notice?
+
+
+# Power analysis
+
+Simulation-based power analysis involves four steps [e.g., @Wickelmaier22]:
+specifying a model that includes the effect of interest, generating data from
+the model, testing the null hypothesis, repeating data generation and testing.
+The proportion of times the test turns out significant is an estimate of its
+power.
+
+## Check simulation setup: parameter recovery
+
+Set up a data generator.
+
+```{r}
+s <- mptspec(
+  E.1 = c * r,
+  E.2 = (1 - c) * u^2,
+  E.3 = 2 * (1 - c) * u * (1 - u),
+  E.4 = c * (1 - r) + (1 - c) * (1 - u)^2,
+  F.1 = a,
+  F.2 = 1 - a
+)
+s$par     # before you use par2prob(), carefully check position of parameters!
+s$par2prob(c(c = 0.5, r = 0.5, u = 0.4, a = 0.6))   # evaluate model equations
+
+dataGen <- function(nn, d) {
+  structure(list(                                            # stub mpt object
+    treeid = s$treeid,
+         n = setNames((nn * c(2, 1)/3)[s$treeid], s$treeid), # 2:1 ratio
+      pcat = s$par2prob(c(c = 0.5, r = 0.5,
+                          u = 0.5 - d/2, a = 0.5 + d/2))
+  ), class = "mpt") |>
+    simulate()
+}
+dataGen(960, 0.2)
+```
+
+Try to recover the parameter values from the generated responses.
+
+```{r, fig.width = 5}
+replicate(20, dataGen(960, 0.2) |> mpt(s, data = _) |> coef()) |>
+  t() |>
+  boxplot(horizontal = TRUE)
+```
+
+## Exercise: parameter recovery
+
+Run your own parameter recovery:
+
+  - Set up a data generator that outputs responses from the
+    one-high-threshold model. Set, e.g., $r = 0.6$, $b = 0.2$.
+  - Fit the model to the generated data and estimate its parameters.
+  - Repeat the generation and estimation steps 20 times and draw a boxplot
+    of the estimates.
+
+Did you succeed in recovering the parameters?
+
+## Power simulation: goodness-of-fit test
+
+The first example is a power analysis of the goodness-of-fit test of the
+storage-retrieval pair-clustering model. The model assumes identical
+processing of non-clustered pairs and singletons, so H~0~: $a = u$.
+
+Set up a function that calls the data generator, performs the test, and
+returns its p value.
+
+```{r}
+testFun <- function(nn, d) {
+  y <- dataGen(nn, d)                            # generate data with effect
+  m1 <- mpt(s, y)
+  m2 <- mpt(update(s, .restr = list(a = u)), y)
+  anova(m2, m1)$"Pr(>Chi)"[2]                    # test H0, return p value
+}
+```
+
+Repeating the data generation and testing steps for each condition may take
+some time, depending on the model, the number of conditions, and the number of
+replications.
+
+```{r}
+# pwrsim1 <- expand.grid(d = seq(0, 0.5, 0.1), n = 30 * 2^(0:5))
+# 
+# system.time(  # about 20 min
+#   pwrsim1$pval <-
+#     mapply(function(nn, d) replicate(500, testFun(nn, d)),
+#            nn = pwrsim1$n, d = pwrsim1$d, SIMPLIFY = FALSE)
+# )
+# pwrsim1$pwr <- sapply(pwrsim1$pval, function(p) mean(p < .05))
+# }
+```
+
+To save a bit of time, the above simulation has been pre-run, see `?pwrsim`,
+and results are reused here for illustration.
+
+```{r, fig.width = 5}
+data(pwrsim)  # provides pwrsim1 and pwrsim2
+if(requireNamespace("lattice")) {
+  lattice::xyplot(pwr ~ d, pwrsim1, groups = n, type = c("g", "b"),
+                  auto.key = list(space = "right"),
+                  xlab = "Parameter difference a - u",
+                  ylab = "Simulated power")
+}
+```
+
+## Power simulation: age differences in retrieval
+
+The second example is a power analysis of a test of age differences in
+retrieval. It requires a two-group model, so the hypothesis
+$r_{young} = r_{old}$ can be tested.
+
+```{r, fig.width = 5}
+s <- mptspec("SR", .replicates = 2)
+
+dataGen <- function(nn, d) {
+  structure(list(
+    treeid = s$treeid,
+         n = setNames((nn/2 * c(2, 1, 2, 1)/3)[s$treeid], s$treeid),
+      pcat = s$par2prob(c(c1 = 0.5, r1 = 0.4 + d/2, u1 = 0.3,   # young
+                          c2 = 0.5, r2 = 0.4 - d/2, u2 = 0.3))  # old
+  ), class = "mpt") |>
+    simulate(m)
+}
+
+testFun <- function(nn, d) {
+  y <- dataGen(nn, d)
+  m1 <- mpt(s, y)
+  m2 <- mpt(update(s, .restr = list(r1 = r2)), y)
+  anova(m2, m1)$"Pr(>Chi)"[2]
+}
+
+# pwrsim2 <- expand.grid(d = seq(0, 0.4, 0.1), n = 120 * 2^(0:2))
+
+if(requireNamespace("lattice")) {
+  lattice::xyplot(pwr ~ d, pwrsim2, groups = n, type = c("g", "b"),
+                  auto.key = list(space = "right"),
+                  xlab = "Parameter difference r1 - r2",
+                  ylab = "Simulated power")
+}
+```
+
+## Exercise: power simulation
+
+In the storage-retrieval pair-clustering model, what sample size is required
+to detect a parameter difference $r_{young} - r_{old} = 0.4$ with a power of
+about 0.8?
+
+Simulate power for
+
+  - three or four different sample sizes
+  - 50 or 100 replications each.
+
+
+# References
+

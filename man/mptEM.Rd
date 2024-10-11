@@ -60,12 +60,21 @@ mptEM(theta, data, a, b, c, maxit = 1000, tolerance = 1e-8,
   \emph{Psychometrika},
   \bold{59}(1), 21--47.
   \doi{10.1007/bf02294263}
+
+  Riefer, D.M., Knapp, B.R., Batchelder, W.H., Bamber, D., & Manifold, V.
+  (2002).
+  Cognitive psychometrics: Assessing storage and retrieval deficits
+  in special populations with multinomial processing tree models.
+  \emph{Psychological Assessment},
+  \bold{14}(2), 184--201.
+  \doi{10.1037/1040-3590.14.2.184}
 }
 \seealso{
   \code{\link{mpt}}.
 }
 \examples{
-## Fit storage-retrieval model to data in Riefer et al. (2002)
+# Fit storage-retrieval pair-clustering model to data in Riefer et al.
+# (2002) using EM algorithm
 mpt(mptspec("SR2"), c(243, 64, 58, 55), method = "EM")
 }
 \keyword{models}

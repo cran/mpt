@@ -47,7 +47,7 @@
   Hennig, M., & Huetter, M. (2020).
   Revisiting the divide between deontology and utilitarianism in moral
   dilemma judgment: A multinomial modeling approach.
-  \emph{Journal of Personality and Social Psychology}
+  \emph{Journal of Personality and Social Psychology},
   \bold{118}(1), 22--56.
   \doi{10.1037/pspa0000173}
   

@@ -104,15 +104,15 @@ m7 <- mpt(m2$spec, data = y, start = runif(20), method = "EM")
 
 idx <- c("P", "p", "Q", "q", "a", "c", "x", "d", "s", "i")
 par(mfrow = 1:2)
-dotchart(coef(m2)[paste0(idx, 1)], xlim=c(0, 1), labels=idx,
-         main="Klauer et al. (2007, Exp. 1)", xlab="")
-points(coef(m2)[paste0(idx, 2)], 1:10, pch=16)
-legend(0, 11, c("standard", "hints"), pch=c(1, 16),
-       title="Instruction", bty="n")
-dotchart(coef(m7)[paste0(idx, 1)], xlim=c(0, 1), labels=idx,
-         main="Replication study", xlab="")
-points(coef(m7)[paste0(idx, 2)], 1:10, pch=16)
-mtext("Parameter estimate (inference-guessing model)", side=1,
-      outer=TRUE, line=-2)
+dotchart(coef(m2)[paste0(idx, 1)], xlim = 0:1, labels = idx,
+         main = "Klauer et al. (2007, Exp. 1)", xlab = "")
+points(coef(m2)[paste0(idx, 2)], 1:10, pch = 16)
+legend(0, 11, c("standard", "hints"), pch = c(1, 16),
+       title = "Instruction", bty = "n")
+dotchart(coef(m7)[paste0(idx, 1)], xlim = 0:1, labels = idx,
+         main = "Replication study", xlab = "")
+points(coef(m7)[paste0(idx, 2)], 1:10, pch = 16)
+mtext("Parameter estimate (inference-guessing model)", side = 1,
+      outer = TRUE, line = -2)
 }
 \keyword{datasets}

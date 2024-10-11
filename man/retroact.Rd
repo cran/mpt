@@ -44,7 +44,7 @@
 \examples{
 data(retroact)
 
-## Fitting individual storage-retrieval models per condition
+## Fitting separate storage-retrieval pair-clustering models per condition
 spec <- mptspec(
   c*r,
   (1 - c)*u^2,
@@ -57,15 +57,15 @@ pars <- sapply(0:4,
   function(x) coef(mpt(spec, retroact[retroact$lists == x, ])))
 
 ## Figure 3 in Riefer & Batchelder (1988)
-plot(pars["c", ] ~ I(0:4), pch=16, type="b", ylim=c(.3, 1),
-     xlab="Number of interpolated lists, j",
-     ylab="Parameter estimate (Storage-retrieval model)",
-     main="Riefer and Batchelder (1988)")
-points(pars["r", ] ~ I(0:4), type="b", lty=2)
+plot(pars["c", ] ~ I(0:4), pch = 16, type = "b", ylim = c(.3, 1),
+     xlab = "Number of interpolated lists, j",
+     ylab = "Parameter estimate (Storage-retrieval model)",
+     main = "Riefer and Batchelder (1988)")
+points(pars["r", ] ~ I(0:4), type = "b", lty = 2)
 text(3, .89, expression("Storage of clusters," ~ hat(c)[j]))
 text(3, .46, expression("Retrieval of clusters," ~ hat(r)[j]))
 
-## Testing effects of interpolated lists
+## Testing effects of interpolated lists: joint models
 spec <- mptspec(
   c0*r0,
   (1 - c0)*u0^2,
@@ -103,9 +103,9 @@ spec <- mptspec(
   1 - u4
 )
 m1 <- mpt(spec, retroact)
-m2 <- mpt(update(spec, .restr=list(r0=r, r1=r, r2=r, r3=r, r4=r)),
+m2 <- mpt(update(spec, .restr = list(r0=r, r1=r, r2=r, r3=r, r4=r)),
           retroact)
-m3 <- mpt(update(spec, .restr=list(c0=c, c1=c, c2=c, c3=c, c4=c)),
+m3 <- mpt(update(spec, .restr = list(c0=c, c1=c, c2=c, c3=c, c4=c)),
           retroact)
 
 anova(m2, m1)  # r decreases the more lists have been interpolated

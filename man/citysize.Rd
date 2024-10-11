@@ -98,7 +98,7 @@ city.agg <- aggregate(y ~ group, WorldCities, sum)
 y <- as.vector(t(city.agg[, -1]))
 
 m1 <- mpt(mptspec("rmodel", .replicates = 2), y)
-m2 <- mpt(update(m1$spec, .restr = list(r2=r1)), y)
+m2 <- mpt(update(m1$spec, .restr = list(r2 = r1)), y)
 anova(m2, m1)  # more use of RH with recognition instruction
 
 ## Fit r-model separately for each task type
@@ -112,23 +112,23 @@ city.agg <- aggregate(y ~ group, ItalianCities, sum)
 y <- as.vector(t(city.agg[, -1]))
 
 m3 <- mpt(mptspec("rmodel", .replicates = 2), y)
-m4 <- mpt(update(m1$spec, .restr = list(r2=r1)), y)
+m4 <- mpt(update(m1$spec, .restr = list(r2 = r1)), y)
 anova(m4, m3)  # less use of RH with elevation task
 
 ## Plot parameter estimates
 par(mfrow = 1:2)
-dotchart(coef(m1)[c(4, 1:3)], xlim=0:1, labels=c("a", "b", "g", "r"),
-         xlab="", main="by instruction type")
-points(coef(m1)[c(8, 5:7)], 1:4, pch=16)
-legend(0, 1, c("none", "recognition"), pch=c(1, 16),
-       title="Instruction", bty="n")
-dotchart(coef(m3)[c(4, 1:3)], xlim=0:1, labels=c("a", "b", "g", "r"),
-         xlab="", main="by task type")
-points(coef(m3)[c(8, 5:7)], 1:4, pch=16)
-legend(0, 1, c("population", "elevation"), pch=c(1, 16),
-       title="Task", bty="n")
-title("Recognition heuristic use", outer=TRUE, line=-1)
-mtext("Parameter estimate (r-model)", side=1, outer=TRUE, line=-2)
+dotchart(coef(m1)[c(4, 1:3)], xlim = 0:1, labels = c("a", "b", "g", "r"),
+         xlab = "", main = "by instruction type")
+points(coef(m1)[c(8, 5:7)], 1:4, pch = 16)
+legend(0, 1, c("none", "recognition"), pch = c(1, 16),
+       title = "Instruction", bty = "n")
+dotchart(coef(m3)[c(4, 1:3)], xlim = 0:1, labels = c("a", "b", "g", "r"),
+         xlab = "", main = "by task type")
+points(coef(m3)[c(8, 5:7)], 1:4, pch = 16)
+legend(0, 1, c("population", "elevation"), pch = c(1, 16),
+       title = "Task", bty = "n")
+title("Recognition heuristic use", outer = TRUE, line = -1)
+mtext("Parameter estimate (r-model)", side = 1, outer = TRUE, line = -2)
 
 ## Compare with original results
 Hilbig2010 <- rbind(

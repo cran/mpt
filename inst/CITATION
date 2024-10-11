@@ -1,17 +1,11 @@
-
-citEntry(entry="Misc",
+bibentry(bibtype = "Misc",
   title  = "Multinomial processing tree models in {R}",
-  author = personList(as.person("Florian Wickelmaier"),
-                      as.person("Achim Zeileis")),
+  author = c(person(given = "Florian", family = "Wickelmaier"),
+             person(given = "Achim", family = "Zeileis")),
   year   = "2011",
   note   = "Presented at the R User Conference 2011, August 16-18,
             Coventry, UK",
   url    = "https://www.R-project.org/conferences/useR-2011/TalkSlides/Contributed/17Aug_1705_FocusV_3-Psychometrics_1-Wickelmaier.pdf",
-
-  textVersion =
-  paste("Wickelmaier, F. and Zeileis, A. (2011).",
-        "Multinomial processing tree models in R.",
-        "Presented at the R User Conference 2011, August 16-18,
-         Coventry, UK."),
   header = "Please cite the mpt package by the following reference:"
 )
+

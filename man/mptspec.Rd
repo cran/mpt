@@ -60,7 +60,7 @@ mptspec(\dots, .replicates = NULL, .restr = NULL)
 
   \code{SourceMon}: the source-monitoring model (Batchelder & Riefer, 1990).
 
-  \code{SR}, \code{SR2}: the storage-retrieval model for pair clustering
+  \code{SR}, \code{SR2}: the storage-retrieval pair-clustering model
     (Batchelder & Riefer, 1986). \code{SR2} is the model without singleton
     items.
 
@@ -179,7 +179,7 @@ mptspec(\dots, .replicates = NULL, .restr = NULL)
   \code{\link{mpt}}.
 }
 \examples{
-## Specify storage-retrieval model for pairs
+## Specify storage-retrieval pair-clustering model for pairs
 spec1 <- mptspec(
   c*r,
   (1 - c)*u^2,
@@ -187,7 +187,7 @@ spec1 <- mptspec(
   c*(1 - r) + (1 - c)*(1 - u)^2
 )
 
-## Specify storage-retrieval model with parameter restrictions
+## Specify model with parameter restrictions
 spec2 <- mptspec(
   c*r,
   (1 - c)*u^2,
@@ -196,7 +196,7 @@ spec2 <- mptspec(
   .restr = list(c = r/2, u = 0.3)
 )
 
-## Optional names identifying trees in joint MPT model
+## Optional names (dot notation) identifying trees in joint MPT model
 spec3 <- mptspec(
       Target.Hit  = r + (1 - r)*b,
       Target.Miss = (1 - r)*(1 - b),
